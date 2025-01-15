@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.hugo.demo.dateItemPrice;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message DateItemPrice {
+  string metalId = 1;
+  double open = 2;
+  double close = 3;
+  double high = 4;
+  double low = 5;
+  google.protobuf.Timestamp created_At = 6;
+  google.protobuf.Timestamp updated_At = 7;
+}
+

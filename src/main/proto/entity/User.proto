@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.hugo.demo.user;
+
+option java_multiple_files = true;
+
+message User {
+  int64 userId = 1;
+  string name = 2;
+  string phoneNumber = 3;
+  string email = 4;
+  string pin = 5;
+  int64 walletBalance = 6;
+}
+

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.hugo.demo.currency;
+
+option java_multiple_files = true;
+
+message Currency {
+  string currencyCode = 1;
+  string currencyName = 2;
+  string value = 3;
+}
+

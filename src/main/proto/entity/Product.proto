@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.hugo.demo.product;
+
+option java_multiple_files = true;
+
+message Product {
+  string metalId= 1;
+  string productDescription = 2;
+  string productName = 3;
+}
+

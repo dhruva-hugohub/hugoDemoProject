@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.hugo.demo.metalId;
+
+option java_multiple_files = true;
+
+enum MetalType {
+  XAG = 0;
+  XAU = 1;
+  PD = 3;
+  PT = 4;
+}

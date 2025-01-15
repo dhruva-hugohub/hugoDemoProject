@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package com.hugo.demo.order;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message Order {
+  int64 orderId = 1;
+  string metalId = 2;
+  bool paymentProcessed = 3;
+  int64 userId = 4;
+  double amount = 5;
+  string currencyCode = 6;
+  string statusOfOrder = 7;
+  google.protobuf.Timestamp created_At = 8;
+  google.protobuf.Timestamp updated_At = 9;
+}
+

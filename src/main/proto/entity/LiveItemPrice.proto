@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.hugo.demo.liveItemPrice;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message LiveItemPrice {
+  string metalId = 1;
+  double performance = 2;
+  double askValue = 3;
+  double bidValue = 4;
+  double value = 5;
+  google.protobuf.Timestamp created_At = 6;
+  google.protobuf.Timestamp updated_At = 7;
+}
+
