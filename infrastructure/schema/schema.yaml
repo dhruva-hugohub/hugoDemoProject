@@ -1,0 +1,127 @@
+schema_version: 1
+
+intial:
+  - CREATE TABLE IF NOT EXISTS Version (
+    name        VARCHAR(10)         NOT NULL,
+    version     SMALLINT UNSIGNED   NOT NULL,
+    PRIMARY KEY (name)
+    );
+
+  #-----------------USER ---------------------
+  - CREATE TABLE User (
+    userId INT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phoneNumber VARCHAR(15),
+    emailAddress VARCHAR(255) NOT NULL UNIQUE,
+    pinHash VARCHAR(255) NOT NULL,
+    passwordHash VARCHAR(255) NOT NULL,
+    deleted                 BOOLEAN           NOT NULL DEFAULT FALSE,
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    );
+
+  #-----------------DAY ITEM PRICE ---------------------
+  - CREATE TABLE DayItemPrice (
+    metalId INT NOT NULL,
+    date DATE NOT NULL,
+    openPrice DECIMAL(15, 2),
+    closePrice DECIMAL(15, 2),
+    highPrice DECIMAL(15, 2),
+    lowPrice DECIMAL(15, 2),
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (metalId, date)
+    );
+
+  #-----------------LIVE ITEM PRICE ---------------------
+  - CREATE TABLE LiveItemPrice (
+    metalId INT NOT NULL,
+    performance VARCHAR(255),
+    askValue DECIMAL(15, 2),
+    bidValue DECIMAL(15, 2),
+    value DECIMAL(15, 2),
+    dateTime TIMESTAMP NOT NULL,
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (metalId, dateTime)
+    );
+
+  #-----------------PRODUCT---------------------
+  - CREATE TABLE Product (
+    metalId CHAR(3) NOT NULL,
+    providerId INT NOT NULL,
+    productName VARCHAR(255),
+    productDescription TEXT,
+    stock INT NOT NULL,
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (metalId, providerId),
+    FOREIGN KEY (providerId) REFERENCES Provider(providerId)
+    );
+
+  #-----------------ALERT---------------------
+  - CREATE TABLE Alert (
+    userId INT NOT NULL,
+    metalId INT NOT NULL,
+    minPrice DECIMAL(15, 2),
+    maxPrice DECIMAL(15, 2),
+    typeOfAlert VARCHAR(50),
+    dateOfAlertCreation DATE,
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (userId, metalId)
+    );
+
+  #-----------------PROVIDER---------------------
+  - CREATE TABLE Provider (
+    providerId INT PRIMARY KEY,
+    providerName VARCHAR(255) NOT NULL,
+    providerAPIUrl VARCHAR(255),
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    );
+
+  #-----------------CURRENCY---------------------
+  - CREATE TABLE Currency (
+    currencyCode CHAR(3) PRIMARY KEY,
+    currencyName VARCHAR(50),
+    value DECIMAL(15, 2)
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    );
+
+  #-----------------ORDER---------------------
+  - CREATE TABLE Order (
+    orderId INT PRIMARY KEY,
+    metalId INT NOT NULL,
+    userId INT NOT NULL,
+    providerId INT,
+    orderStatus VARCHAR(50),
+    closingBalance DECIMAL(15, 2),
+    amount DECIMAL(15, 2),
+    quantity DECIMAL(10, 2),
+    dateOfOrderCreation DATE,
+    typeOfTransaction   VARCHAR(255) NOT NULL,
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    );
+
+  #-----------------WALLET---------------------
+  - CREATE TABLE Wallet (
+    walletId INT PRIMARY KEY,
+    userId INT NOT NULL,
+    walletBalance DECIMAL(15, 2),
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    FOREIGN KEY (userId) REFERENCES UserTable(userId)
+    );
+
+  #-----------------QUANTITY---------------------
+  - CREATE TABLE Quantity (
+    metalId CHAR(3) NOT NULL,
+    userId INT NOT NULL,
+    quantity INT NOT NULL,
+    create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
+    update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY(userId,metalId)
+    );

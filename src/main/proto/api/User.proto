@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.user;
+
+option java_multiple_files = true;
+
+message UserLoginRequestDTO {
+  optional string email = 1;
+  optional string password = 2;
+}
+
+message UserLoginResponseDTO {
+  int64 userId = 1;
+  string name = 2;
+  string token = 3;
+  string email = 4;
+  string phoneNumber = 5;
+}
+
+message UserRegisterRequestDTO{
+  string name = 1;
+  string email = 2;
+  string phonenumber = 3;
+  string password = 4;
+  string pin = 5;
+}
+
+message UserRegisterResponseDTO {
+  string name = 1;
+  string email = 2;
+  string token = 3;
+  int64 userId = 4;
+  string phoneNumber = 5;
+  string pin = 6;
+  int64 walletBalance = 7;
+}
+
+message UserPasswordUpdateRequestDTO {
+  string currentpassword = 1;
+  string newpassword = 2;
+}
+
+message UserPasswordUpdateResponseDTO {
+  string message = 1;
+}
+
+message UserUpdateRequestDTO {
+  string name = 1;
+  string phoneNumber = 2;
+}
+
+message UserUpdateResponseDTO {
+  int32 userid = 1;
+  string name = 2;
+  string phonenumber = 3;
+}
+
+message UserPinUpdateRequestDTO {
+  string currentPin = 1;
+  string newPin = 2;
+}
+
+message UserPinUpdateResponseDTO {
+  string message = 1;
+}
+
+message UserProfileRequestDTO {}
+
+message UserProfileResponseDTO {
+  int32 userId = 1;
+  string name = 2;
+  string emailAddress = 3;
+  string phoneNumber = 4;
+}
+
+message DeactivateUserRequestDTO {}
+
+message DeactivateUserResponseDTO {
+  string message = 1;
+}

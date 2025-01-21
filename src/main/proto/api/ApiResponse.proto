@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_package = "com.common.utility.proto";
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+
+message ApiRequest {
+  string body = 1;
+  map<string, string> claims = 2;
+  map<string, string> query_params = 3;
+  string request_id = 4;
+  string http_method = 5;
+}
+
+message ApiStatusCode {
+  string status_code = 1;
+  string message = 2;
+}
+
+message ApiResponseHeader {
+  string status_code = 1;
+  string message = 2;
+  string trace_id = 3;
+}
+
+message ApiResponse {
+  ApiResponseHeader headers = 1;
+  optional google.protobuf.Any data = 2;
+  optional string page_token = 3;
+  optional bool has_more_pages = 4;
+  optional string reverse_page_token = 5;
+  optional bool has_more_reverse_pages = 6;
+}
+
