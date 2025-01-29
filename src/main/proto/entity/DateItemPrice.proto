@@ -6,13 +6,15 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
-message DateItemPrice {
-  string metalId = 1;
+message DateItemPriceEntity {
+  string metal_id = 1;
   double open = 2;
   double close = 3;
   double high = 4;
   double low = 5;
-  google.protobuf.Timestamp created_At = 6;
-  google.protobuf.Timestamp updated_At = 7;
+  string date = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
+
 

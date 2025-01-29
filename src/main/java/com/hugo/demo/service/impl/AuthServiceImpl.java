@@ -1,6 +1,5 @@
 package com.hugo.demo.service.impl;
 
-import com.hugo.demo.api.user.UserLoginRequestDTO;
 import com.hugo.demo.config.JwtTokenProvider;
 import com.hugo.demo.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +22,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String login(UserLoginRequestDTO userLoginRequestDTO) {
+    public String login(String email, String password) {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-            userLoginRequestDTO.getEmail(),
-            userLoginRequestDTO.getPassword()
+            email,
+           password
         ));
 
 

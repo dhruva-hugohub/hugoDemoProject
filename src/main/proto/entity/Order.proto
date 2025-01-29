@@ -7,14 +7,14 @@ option java_multiple_files = true;
 import "google/protobuf/timestamp.proto";
 
 message Order {
-  int64 orderId = 1;
-  string metalId = 2;
-  bool paymentProcessed = 3;
-  int64 userId = 4;
+  int64 order_id = 1;
+  string metal_id = 2;
+  bool payment_processed = 3;
+  int64 user_id = 4;
   double amount = 5;
-  string currencyCode = 6;
-  string statusOfOrder = 7;
-  google.protobuf.Timestamp created_At = 8;
+  string currency_code = 6;
+  string status_of_order = 7;
+  google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_At = 9;
 }
 

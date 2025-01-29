@@ -1,7 +1,5 @@
 package com.hugo.demo.exception;
 
-import java.util.List;
-
 import com.hugo.demo.api.ApiStatusCode;
 
 public enum CommonStatusCode implements ApiStatusCode {
@@ -19,6 +17,7 @@ public enum CommonStatusCode implements ApiStatusCode {
     METHOD_NOT_ALLOWED_ERROR("E9405", "Invalid input provider or bad request"),
     NOT_ACCEPTABLE_ERROR("E9406", "The given request is not in acceptable state"),
     ILLEGAL_ARGUMENT_ERROR("E9409", "Illegal argument exception"),
+    DUPLICATE_RECORD_ERROR("E9409", "Duplicate Record"),
     ILLEGAL_STATE_ERROR("E9409", "Illegal state exception"),
     INVALID_ORIGIN("E9410", "Invalid Origin is passed"),
     INVALID_MEDIA_TYPE_ERROR("E9415", "Invalid media type provided"),
@@ -39,23 +38,6 @@ public enum CommonStatusCode implements ApiStatusCode {
     CommonStatusCode(String statusCode, String message) {
         this.statusCode = statusCode;
         this.message = message;
-    }
-
-    //Will remove later
-    @Deprecated
-    public static ApiStatusCode buildMissingParameterErrorHeader(List<String> params) {
-        String message = String.format("Missing params [%s]", params);
-        return new ApiStatusCode() {
-            @Override
-            public String getStatusCode() {
-                return MISSING_PARAMETER_EXCEPTION.getStatusCode();
-            }
-
-            @Override
-            public String getMessage() {
-                return message;
-            }
-        };
     }
 
     @Override

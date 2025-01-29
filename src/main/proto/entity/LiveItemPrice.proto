@@ -6,13 +6,14 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
-message LiveItemPrice {
-  string metalId = 1;
+message LiveItemPriceEntity {
+  string metal_id = 1;
   double performance = 2;
-  double askValue = 3;
-  double bidValue = 4;
+  double ask_value = 3;
+  double bid_value = 4;
   double value = 5;
-  google.protobuf.Timestamp created_At = 6;
-  google.protobuf.Timestamp updated_At = 7;
+  google.protobuf.Timestamp dateTime = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
 

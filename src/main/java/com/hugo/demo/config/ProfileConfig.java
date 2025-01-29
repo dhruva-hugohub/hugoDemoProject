@@ -5,8 +5,12 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.util.JsonFormat;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hugo.demo.api.user.UserLoginResponseDTO;
+import com.hugo.demo.api.liveItemPrice.LiveItemPriceAPIResponseDTO;
+import com.hugo.demo.api.product.ProductResponseDTO;
+import com.hugo.demo.api.provider.AllProvidersResponseDTO;
+import com.hugo.demo.api.provider.ProviderResponseDTO;
 import com.hugo.demo.api.user.UserRegisterResponseDTO;
+import com.hugo.demo.api.user.UserResponseDTO;
 import com.hugo.demo.protobuf.ProtoMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +27,12 @@ public class ProfileConfig implements WebMvcConfigurer {
     @Bean
     ProtoMessageConverter protoMessageConverter() {
         JsonFormat.TypeRegistry typeRegistry = JsonFormat.TypeRegistry.newBuilder()
-            .add(UserLoginResponseDTO.getDescriptor())
+            .add(UserResponseDTO.getDescriptor())
             .add(UserRegisterResponseDTO.getDescriptor())
+            .add(LiveItemPriceAPIResponseDTO.getDescriptor())
+            .add(AllProvidersResponseDTO.getDescriptor())
+            .add(ProviderResponseDTO.getDescriptor())
+            .add(ProductResponseDTO.getDescriptor())
             .build();
         return new ProtoMessageConverter(typeRegistry);
     }

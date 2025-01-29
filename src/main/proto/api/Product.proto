@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.product;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message AddProductRequestDTO {
+  string metalId = 1;
+  string productName = 2;
+  string description = 3;
+  int32 providerId = 4;
+  double price = 5;
+}
+
+message EditProductRequestDTO {
+  string metalId = 1;
+  int32 providerId = 2;
+  string productName = 3;
+  string description = 4;
+  double price = 5;
+}
+
+message ProductResponseDTO {
+  string metalId = 1;
+  int64 providerId = 2;
+  string productName = 3;
+  string description = 4;
+  double price = 5;
+  google.protobuf.Timestamp createTs = 6;
+  google.protobuf.Timestamp updateTs = 7;
+}
+
+message AllProductsResponseDTO {
+  repeated ProductResponseDTO products = 1;
+}
+
+message DeleteProductRequestDTO {
+  string metalId = 1;
+  int32 providerId = 2;
+}
+
+message GetProductsByProviderIdRequestDTO {
+  int32 providerId = 1;
+  int32 page = 2;
+  int32 size = 3;
+  string sortField = 4;
+  string sortOrder = 5;
+}
+
+message GetProductsByMetalCodeRequestDTO {
+  string metalId = 1;
+  int32 page = 2;
+  int32 size = 3;
+  string sortField = 4;
+  string sortOrder = 5;
+}
+
+message GetProductsByProviderIdResponseDTO {
+  repeated ProductResponseDTO products = 1;
+  int32 totalPages = 2;
+  int32 totalItems = 3;
+}
+
+message GetProductsByMetalCodeResponseDTO {
+  repeated ProductResponseDTO products = 1;
+  int32 totalPages = 2;
+  int32 totalItems = 3;
+}

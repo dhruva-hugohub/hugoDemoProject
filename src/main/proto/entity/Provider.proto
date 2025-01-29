@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.hugo.demo.provider;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message ProviderEntity {
+  int32 providerId = 1;
+  string providerName = 2;
+  string providerAPIUrl = 3;
+  google.protobuf.Timestamp createTs = 4;
+  google.protobuf.Timestamp updateTs = 5;
+}

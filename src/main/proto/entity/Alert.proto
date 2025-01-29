@@ -7,12 +7,12 @@ option java_multiple_files = true;
 import "google/protobuf/timestamp.proto";
 
 message Alert {
-  int64 userId = 1;
-  string metalId = 2;
-  string minPrice = 3;
-  string maxPrice = 4;
-  string typeOfAlert = 5;
-  google.protobuf.Timestamp created_At = 8;
-  google.protobuf.Timestamp updated_At = 9;
+  int64 user_id = 1;
+  string metal_id = 2;
+  string min_price = 3;
+  string max_price = 4;
+  string type_of_alert = 5;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
 }
 

@@ -1,14 +1,16 @@
 package com.hugo.demo.config;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,20 +31,12 @@ public class JwtTokenProvider {
     public String generateToken(Authentication authentication) {
 
         String username = authentication.getName();
-        String authorities = authentication.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .collect(Collectors.joining(","));
+        String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + expirationTime);
-        Map<String, String> claims = new HashMap<>();
-        claims.put("role", authorities);
 
-        return Jwts.builder()
-            .subject(username)
-            .claim(authoritiesKey, authorities)
-            .issuedAt(new Date()).expiration(expireDate)
-            .signWith(SignatureAlgorithm.HS256, secretKey)
-            .compact();
+        return Jwts.builder().subject(username).claim(authoritiesKey, authorities).issuedAt(new Date()).expiration(expireDate)
+            .signWith(secretKey(secretKey)).compact();
     }
 
 
@@ -60,11 +54,7 @@ public class JwtTokenProvider {
     }
 
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser()
-            .setSigningKey(secretKey)
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
+        return Jwts.parser().verifyWith(secretKey(secretKey)).build().parseSignedClaims(token).getPayload();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -72,8 +62,20 @@ public class JwtTokenProvider {
         return expiration.before(new Date());
     }
 
+    public SecretKey secretKey(String secretKey) {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
+
     public boolean validateToken(String token, String email) {
         final String username = getUsernameFromToken(token);
         return (username.equals(email) && !isTokenExpired(token));
+    }
+
+    public String generateSecretKey() {
+        int length = 32;
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] keyBytes = new byte[length];
+        secureRandom.nextBytes(keyBytes);
+        return Base64.getEncoder().encodeToString(keyBytes);
     }
 }

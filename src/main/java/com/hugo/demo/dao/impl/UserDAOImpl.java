@@ -1,100 +1,117 @@
 package com.hugo.demo.dao.impl;
 
-
-import static com.hugo.demo.util.DateUtil.convertToProtoTimestamp;
-
-import java.util.List;
-import java.util.Objects;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Optional;
 
-import com.google.protobuf.Timestamp;
 import com.hugo.demo.dao.SQLQueryConstants;
 import com.hugo.demo.dao.UserDAO;
+import com.hugo.demo.exception.CommonStatusCode;
+import com.hugo.demo.exception.RecordAlreadyExistsException;
 import com.hugo.demo.user.UserEntity;
 import com.hugo.demo.util.DateUtil;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class UserDAOImpl implements UserDAO {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAOImpl.class);
-    private final EntityManager entityManager;
+
+    private static final Logger logger = LoggerFactory.getLogger(UserDAOImpl.class);
+
+    private final JdbcTemplate jdbcTemplate;
+
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Autowired
-    public UserDAOImpl(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public UserDAOImpl(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     @Override
     public Optional<UserEntity> findByEmailAddress(String emailAddress) {
-        Query findByEmailAddress =
-            entityManager.createNativeQuery(SQLQueryConstants.FIND_BY_EMAIL_ADDRESS).setParameter("emailAddress", emailAddress);
+        String sql = SQLQueryConstants.FIND_BY_EMAIL_ADDRESS;
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("emailAddress", emailAddress);
 
-        List<Object[]> results = findByEmailAddress.getResultList();
-        return results.stream().findFirst().map(result ->
-            UserEntity.newBuilder()
-                .setUserId(((Number) (result)[0]).longValue())
-                .setName((String) (result)[1])
-                .setPhoneNumber((String) (result)[2])
-                .setEmail((String) (result)[3])
-                .setPinHash((String) (result)[4])
-                .setPasswordHash((String) (result)[5])
-                .setToken((String) (result)[9])
-                .setTokenExpiry(convertToProtoTimestamp((java.sql.Timestamp) (result)[10]))
-                .build()
-        );
+        try {
+            return namedParameterJdbcTemplate.query(sql, parameters, rs -> {
+                if (rs.next()) {
+                    return Optional.of(mapRowToUserEntity(rs));
+                }
+                return Optional.empty();
+            });
+        } catch (DataAccessException e) {
+            logger.error("Error occurred while fetching user by email address: {}", emailAddress, e);
+            return Optional.empty();
+        }
     }
 
     @Override
     public boolean existsByEmailAddress(String emailAddress) {
+        String sql = SQLQueryConstants.COUNT_USERS_BY_EMAIL_ADDRESS;
         try {
-            Query findByEmailAddress =
-                entityManager.createNativeQuery(SQLQueryConstants.COUNT_USER_BY_EMAIL_ADDRESS).setParameter("emailAddress", emailAddress);
-            return findByEmailAddress.getSingleResult() != null && !Objects.equals(findByEmailAddress.getSingleResult().toString(), "0");
-        } catch (Exception e) {
+            Integer count = jdbcTemplate.queryForObject(sql,  Integer.class, emailAddress);
+            return count != null && count > 0;
+        } catch (DataAccessException e) {
+            logger.error("Error occurred while checking existence of email address: {}", emailAddress, e);
             return false;
         }
     }
 
     @Override
-    @Transactional
     public UserEntity save(UserEntity user) {
-        entityManager.createNativeQuery(SQLQueryConstants.ADD_USER)
-            .setParameter("name", user.getName())
-            .setParameter("phoneNumber", user.getPhoneNumber())
-            .setParameter("emailAddress", user.getEmail())
-            .setParameter("pinHash", user.getPinHash())
-            .setParameter("passwordHash", user.getPasswordHash())
-            .setParameter("token", user.getToken())
-            .setParameter("tokenExpiry", tokenExpiryString(user.getTokenExpiry()))
-            .executeUpdate();
+        String sql = SQLQueryConstants.ADD_USER;
 
-        Optional<UserEntity> updatedUser = findByEmailAddress(user.getEmail());
-        return updatedUser.orElse(user);
+        if (findByEmailAddress(user.getEmail()).isPresent()) {
+            throw new RecordAlreadyExistsException(
+                CommonStatusCode.BAD_REQUEST_ERROR, "User with email '" + user.getEmail() + "' already exists."
+            );
+        }
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("name", user.getName())
+            .addValue("phoneNumber", user.getPhoneNumber())
+            .addValue("emailAddress", user.getEmail())
+            .addValue("pinHash", user.getPinHash())
+            .addValue("passwordHash", user.getPasswordHash());
+
+        try {
+            namedParameterJdbcTemplate.update(sql, params);
+            return findByEmailAddress(user.getEmail()).orElse(user);
+        } catch (DataAccessException e) {
+            logger.error("Error occurred while saving user: {}", user.getEmail(), e);
+            throw new RuntimeException("Failed to save user", e);
+        }
     }
 
     @Override
-    @Transactional
     public UserEntity updateToken(UserEntity user) {
-        entityManager.createNativeQuery(SQLQueryConstants.UPDATE_USER_TOKEN)
-            .setParameter("token", user.getToken())
-            .setParameter("tokenExpiry", tokenExpiryString(user.getTokenExpiry()))
-            .setParameter("emailAddress", user.getEmail())
-            .executeUpdate();
+        String sql = SQLQueryConstants.UPDATE_USER_TOKEN;
 
-        Optional<UserEntity> updatedUser = findByEmailAddress(user.getEmail());
-
-        return updatedUser.orElse(null);
+        try {
+            jdbcTemplate.update(sql, user.getToken(), DateUtil.convertTimestampToString(user.getTokenExpiry()), user.getEmail());
+            return findByEmailAddress(user.getEmail()).orElse(null);
+        } catch (DataAccessException e) {
+            logger.error("Error occurred while updating token for user: {}", user.getEmail(), e);
+            return null;
+        }
     }
 
-    private String tokenExpiryString(Timestamp timestamp) {
-        return DateUtil.convertTimestampToString(timestamp);
+    private UserEntity mapRowToUserEntity(ResultSet rs) throws SQLException {
+        return UserEntity.newBuilder()
+            .setUserId(rs.getLong("userId"))
+            .setName(rs.getString("name"))
+            .setPhoneNumber(rs.getString("phoneNumber"))
+            .setEmail(rs.getString("emailAddress"))
+            .setPinHash(rs.getString("pinHash"))
+            .setPasswordHash(rs.getString("passwordHash"))
+            .build();
     }
-
-
 }

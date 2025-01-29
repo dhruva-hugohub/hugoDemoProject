@@ -8,16 +8,16 @@ import "google/protobuf/timestamp.proto";
 
 
 message UserEntity {
-  int64 userId = 1;
+  int64 user_id = 1;
   string name = 2;
-  string phoneNumber = 3;
+  string phone_number = 3;
   string email = 4;
-  string pinHash = 5;
-  string passwordHash = 6;
+  string pin_hash = 5;
+  string password_hash = 6;
   string token = 7;
-  google.protobuf.Timestamp tokenExpiry = 8;
-  google.protobuf.Timestamp createdAt = 9;
-  google.protobuf.Timestamp updatedAt = 10;
+  google.protobuf.Timestamp token_expiry = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
 }
 
 

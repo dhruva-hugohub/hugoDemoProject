@@ -51,6 +51,7 @@ intial:
     metalId CHAR(3) NOT NULL,
     providerId INT NOT NULL,
     productName VARCHAR(255),
+    productValue DECIMAL(15,2),
     productDescription TEXT,
     stock INT NOT NULL,
     create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
@@ -75,7 +76,7 @@ intial:
   #-----------------PROVIDER---------------------
   - CREATE TABLE Provider (
     providerId INT PRIMARY KEY,
-    providerName VARCHAR(255) NOT NULL,
+    providerName VARCHAR(255) NOT NULL UNIQUE,
     providerAPIUrl VARCHAR(255),
     create_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6),
     update_ts               TIMESTAMP(6)      DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),

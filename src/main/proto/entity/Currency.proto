@@ -5,8 +5,8 @@ package com.hugo.demo.currency;
 option java_multiple_files = true;
 
 message Currency {
-  string currencyCode = 1;
-  string currencyName = 2;
+  string currency_code = 1;
+  string currency_name = 2;
   string value = 3;
 }
 
