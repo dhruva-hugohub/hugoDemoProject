@@ -34,6 +34,7 @@ message DateItemPriceFilter {
   string sort_by = 13;
   int32 page = 14;
   int32 page_size = 15;
+  string currency_code = 16;
 }
 
 message PaginatedDateItemPrice {

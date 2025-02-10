@@ -32,5 +32,6 @@ message ProductFilter {
   int32 page = 8;
   int32 page_size = 9;
   int64 provider_id = 10;
+  string currency_code = 11;
 }
 

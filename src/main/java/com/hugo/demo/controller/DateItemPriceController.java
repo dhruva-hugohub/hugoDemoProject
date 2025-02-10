@@ -32,8 +32,8 @@ public class DateItemPriceController {
     }
 
     @GetMapping("/fetch-item-details")
-    public ApiResponse getItemPriceDetails(@RequestParam String metalId, @RequestParam long providerId, @RequestParam String date) {
-        DateItemPriceAPIResponseDTO itemPrice = dateItemPriceService.fetchItemPriceDetails(metalId, providerId, date);
+    public ApiResponse getItemPriceDetails(@RequestParam String metalId, @RequestParam long providerId, @RequestParam String date , @RequestParam String currencyCode) {
+        DateItemPriceAPIResponseDTO itemPrice = dateItemPriceService.fetchItemPriceDetails(metalId, providerId, date, currencyCode);
         return ResponseUtil.buildResponse(CommonStatusCode.SUCCESS, itemPrice);
     }
 

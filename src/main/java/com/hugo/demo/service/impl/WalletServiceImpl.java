@@ -5,8 +5,10 @@ import java.util.Optional;
 import com.hugo.demo.api.wallet.CreateWalletRequestDTO;
 import com.hugo.demo.api.wallet.EditWalletRequestDTO;
 import com.hugo.demo.api.wallet.WalletResponseDTO;
+import com.hugo.demo.currency.CurrencyEntity;
 import com.hugo.demo.exception.CommonStatusCode;
 import com.hugo.demo.exception.InvalidInputException;
+import com.hugo.demo.facade.CurrencyFacade;
 import com.hugo.demo.facade.WalletFacade;
 import com.hugo.demo.service.WalletService;
 import com.hugo.demo.util.ValidationUtil;
@@ -18,8 +20,11 @@ public class WalletServiceImpl implements WalletService {
 
     private final WalletFacade walletFacade;
 
-    public WalletServiceImpl(WalletFacade walletFacade) {
+    private final CurrencyFacade currencyFacade;
+
+    public WalletServiceImpl(WalletFacade walletFacade, CurrencyFacade currencyFacade) {
         this.walletFacade = walletFacade;
+        this.currencyFacade = currencyFacade;
     }
 
     @Override
@@ -27,8 +32,12 @@ public class WalletServiceImpl implements WalletService {
         try {
             ValidationUtil.validateWalletCreateRequest(createWalletRequestDTO);
 
+            CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(createWalletRequestDTO.getCurrencyCode());
+            double currencyValue = currencyEntity.getValue();
+
             WalletEntity walletEntity =
-                WalletEntity.newBuilder().setUserId(createWalletRequestDTO.getUserId()).setWalletBalance(createWalletRequestDTO.getWalletBalance())
+                WalletEntity.newBuilder().setUserId(createWalletRequestDTO.getUserId()).setWalletBalance(createWalletRequestDTO.getWalletBalance()/
+                                                                                                         currencyValue)
                     .build();
 
             walletEntity = walletFacade.save(walletEntity);
@@ -36,7 +45,7 @@ public class WalletServiceImpl implements WalletService {
             return WalletResponseDTO.newBuilder()
                 .setWalletId(walletEntity.getWalletId())
                 .setUserId(walletEntity.getUserId())
-                .setWalletBalance(walletEntity.getWalletBalance()).build();
+                .setWalletBalance(walletEntity.getWalletBalance() * currencyValue).build();
         }
         catch (Exception e) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
@@ -48,12 +57,15 @@ public class WalletServiceImpl implements WalletService {
         try {
             ValidationUtil.validateEditWalletRequest(editWalletRequestDTO);
 
-            WalletEntity walletEntity = walletFacade.updateWallet(editWalletRequestDTO.getUserId(), editWalletRequestDTO.getWalletBalance());
+            CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(editWalletRequestDTO.getCurrencyCode());
+            double currencyValue = currencyEntity.getValue();
+
+            WalletEntity walletEntity = walletFacade.updateWallet(editWalletRequestDTO.getUserId(), editWalletRequestDTO.getWalletBalance()/currencyValue);
 
             return WalletResponseDTO.newBuilder()
                 .setUserId(walletEntity.getUserId())
                 .setWalletId(walletEntity.getWalletId())
-                .setWalletBalance(walletEntity.getWalletBalance()).build();
+                .setWalletBalance(walletEntity.getWalletBalance() * currencyValue).build();
         }
         catch (Exception e) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
@@ -61,7 +73,7 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public WalletResponseDTO findWalletID(long value, String field) {
+    public WalletResponseDTO findWalletID(long value, String field, String currencyCode) {
         try {
             Optional<WalletEntity> optionalWalletEntity;
 
@@ -77,10 +89,14 @@ public class WalletServiceImpl implements WalletService {
                 () -> new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Provided credientials doesnt match with any wallet details")
             );
 
+            CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(currencyCode);
+            double currencyValue = currencyEntity.getValue();
+
+
             return WalletResponseDTO.newBuilder()
                 .setUserId(walletEntity.getUserId())
                 .setWalletId(walletEntity.getWalletId())
-                .setWalletBalance(walletEntity.getWalletBalance())
+                .setWalletBalance(walletEntity.getWalletBalance()/currencyValue)
                 .build();
         }
         catch (Exception e) {

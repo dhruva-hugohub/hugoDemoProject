@@ -21,6 +21,7 @@ message CreateAlertRequestDTO{
   string email = 6;
   string fcm_token = 7;
   enums.alertType.TypeOfAlert type_of_alert = 9;
+  string currency_code = 10;
 }
 
 message EditAlertRequestDTO{
@@ -31,6 +32,7 @@ message EditAlertRequestDTO{
   double max_price = 5;
   optional string email = 6;
   optional string fcm_token = 7;
+  string currency_code = 8;
 }
 
 message AlertResponseDTO{

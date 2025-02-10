@@ -13,7 +13,7 @@ public interface OrderService {
 
     OrderResponseDTO updateOrderStatus(EditOrderRequestDTO orderRequestDTO);
 
-    OrderResponseDTO getOrderDetailsByOrderId(long orderId);
+    OrderResponseDTO getOrderDetailsByOrderId(long orderId, String currencyCode);
 
     void processPendingOrders();
 

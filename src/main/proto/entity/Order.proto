@@ -42,6 +42,7 @@ message OrderFilter {
   string sort_by = 8;
   int32 page = 9;
   int32 page_size = 10;
+  string currency_code = 11;
 }
 
 

@@ -9,5 +9,5 @@ public interface DateItemPriceService {
 
     HistoricalDateItemPriceAPIResponseDTO editItemPrice(String metalId, long providerId, String date, String baseApiUrl, String currencyCode, String weightUnit);
 
-    DateItemPriceAPIResponseDTO fetchItemPriceDetails(String metalId, long providerId, String date);
+    DateItemPriceAPIResponseDTO fetchItemPriceDetails(String metalId, long providerId, String date, String currencyCode);
 }

@@ -10,5 +10,5 @@ public interface WalletService {
 
     WalletResponseDTO updateWallet(EditWalletRequestDTO editWalletRequestDTO);
 
-    WalletResponseDTO findWalletID(long value, String field);
+    WalletResponseDTO findWalletID(long value, String field, String currencyCode);
 }

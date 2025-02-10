@@ -5,7 +5,9 @@ import java.util.Optional;
 import com.hugo.demo.api.dateItemPrice.DateItemPriceAPIResponseDTO;
 import com.hugo.demo.api.dateItemPrice.HistoricalDateItemPriceAPIResponseDTO;
 import com.hugo.demo.api.liveItemPrice.LiveItemPriceAPIResponseDTO;
+import com.hugo.demo.currency.CurrencyEntity;
 import com.hugo.demo.dateItemPrice.DateItemPriceEntity;
+import com.hugo.demo.facade.CurrencyFacade;
 import com.hugo.demo.facade.DateItemPriceFacade;
 import com.hugo.demo.facade.LiveItemPriceFacade;
 import com.hugo.demo.service.DateItemPriceService;
@@ -21,10 +23,12 @@ public class DateItemPriceServiceImpl implements DateItemPriceService {
 
     private final DateItemPriceFacade dateItemPriceFacade;
     private final RestTemplate restTemplate;
+    private final CurrencyFacade currencyFacade;
 
-    public DateItemPriceServiceImpl(DateItemPriceFacade dateItemPriceFacade, RestTemplate restTemplate) {
+    public DateItemPriceServiceImpl(DateItemPriceFacade dateItemPriceFacade, RestTemplate restTemplate, CurrencyFacade currencyFacade) {
         this.dateItemPriceFacade = dateItemPriceFacade;
         this.restTemplate = restTemplate;
+        this.currencyFacade = currencyFacade;
     }
 
     @Override
@@ -38,10 +42,12 @@ public class DateItemPriceServiceImpl implements DateItemPriceService {
     }
 
     @Override
-    public DateItemPriceAPIResponseDTO fetchItemPriceDetails(String metalId, long providerId, String date) {
+    public DateItemPriceAPIResponseDTO fetchItemPriceDetails(String metalId, long providerId, String date, String currencyCode) {
+
+
         Optional<DateItemPriceEntity> itemPriceRecord = dateItemPriceFacade.getRecord(metalId, date, providerId);
 
-        return mapToDateItemPriceAPIResponseDTO(itemPriceRecord.orElse(DateItemPriceEntity.getDefaultInstance()));
+        return mapToDateItemPriceAPIResponseDTO(itemPriceRecord.orElse(DateItemPriceEntity.getDefaultInstance()), currencyCode);
     }
 
     private HistoricalDateItemPriceAPIResponseDTO processItemPrice(String metalId, long providerId, String date, String baseApiUrl, String currencyCode, String weightUnit, boolean isNewRecord) {
@@ -97,14 +103,16 @@ public class DateItemPriceServiceImpl implements DateItemPriceService {
         }
     }
 
-    private DateItemPriceAPIResponseDTO mapToDateItemPriceAPIResponseDTO(DateItemPriceEntity entity) {
+    private DateItemPriceAPIResponseDTO mapToDateItemPriceAPIResponseDTO(DateItemPriceEntity entity, String currencyCode) {
+        CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(currencyCode);
+
         return DateItemPriceAPIResponseDTO.newBuilder()
             .setDate(entity.getDate())
             .setWeightUnit("g")
-            .setOpen(entity.getOpen())
-            .setClose(entity.getClose())
-            .setHigh(entity.getHigh())
-            .setLow(entity.getLow())
+            .setOpen(entity.getOpen() * currencyEntity.getValue())
+            .setClose(entity.getClose() * currencyEntity.getValue())
+            .setHigh(entity.getHigh() * currencyEntity.getValue())
+            .setLow(entity.getLow() * currencyEntity.getValue())
             .setMetalId(entity.getMetalId())
             .setProviderId(entity.getProviderId())
             .build();

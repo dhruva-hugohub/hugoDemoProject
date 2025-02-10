@@ -10,6 +10,7 @@ import com.google.protobuf.util.Timestamps;
 import com.hugo.demo.alert.AlertEntity;
 import com.hugo.demo.api.liveItemPrice.LiveItemPriceAPIResponseDTO;
 import com.hugo.demo.api.product.EditProductRequestDTO;
+import com.hugo.demo.currency.CurrencyEntity;
 import com.hugo.demo.dao.ProviderDAO;
 import com.hugo.demo.dateItemPrice.DateItemPriceEntity;
 import com.hugo.demo.enums.alertType.TypeOfAlert;
@@ -18,6 +19,7 @@ import com.hugo.demo.exception.GenericException;
 import com.hugo.demo.exception.InternalServerErrorException;
 import com.hugo.demo.exception.InvalidInputException;
 import com.hugo.demo.facade.AlertFacade;
+import com.hugo.demo.facade.CurrencyFacade;
 import com.hugo.demo.facade.DateItemPriceFacade;
 import com.hugo.demo.facade.LiveItemPriceFacade;
 import com.hugo.demo.facade.ProductFacade;
@@ -50,19 +52,20 @@ public class LiveItemPriceServiceImpl implements LiveItemPriceService {
     private final DateItemPriceFacade dateItemPriceFacade;
     private final ProductService productService;
     private final AlertFacade alertFacade;
+    private final CurrencyFacade currencyFacade;
 
     @Autowired
     public LiveItemPriceServiceImpl(RestTemplate restTemplate, LiveItemPriceFacade liveItemPriceFacade, ProviderFacade providerFacade,
-                                    DateItemPriceFacade dateItemPriceFacade, ProductService productService, AlertFacade alertFacade
+                                    DateItemPriceFacade dateItemPriceFacade, ProductService productService, AlertFacade alertFacade,
 
-    ) {
+                                    CurrencyFacade currencyFacade) {
         this.restTemplate = restTemplate;
         this.liveItemPriceFacade = liveItemPriceFacade;
         this.providerFacade = providerFacade;
         this.dateItemPriceFacade = dateItemPriceFacade;
         this.productService = productService;
         this.alertFacade = alertFacade;
-
+        this.currencyFacade = currencyFacade;
     }
 
     @Override
@@ -199,7 +202,19 @@ public class LiveItemPriceServiceImpl implements LiveItemPriceService {
             ValidationUtil.validateSortBy(liveItemPriceFilter.getSortBy(),
                 "askValue", "bidValue", "value", "dateTime", "performance", "metalId");
 
-            return liveItemPriceFacade.fetchLiveItemPrices(liveItemPriceFilter);
+            CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(liveItemPriceFilter.getCurrencyCode());
+            double currencyValue = currencyEntity.getValue();
+
+            LiveItemPriceFilter updatedFilter = liveItemPriceFilter.toBuilder()
+                .setValueLowerLimit( liveItemPriceFilter.getValueLowerLimit() / currencyValue )
+                .setValueUpperLimit(liveItemPriceFilter.getValueUpperLimit() / currencyValue)
+                .setAskValueLowerLimit(liveItemPriceFilter.getAskValueLowerLimit() / currencyValue)
+                .setAskValueUpperLimit(liveItemPriceFilter.getAskValueUpperLimit() / currencyValue)
+                .setBidValueLowerLimit(liveItemPriceFilter.getBidValueLowerLimit() / currencyValue)
+                .setBidValueUpperLimit(liveItemPriceFilter.getBidValueUpperLimit() / currencyValue)
+                .build();
+
+            return liveItemPriceFacade.fetchLiveItemPrices(updatedFilter);
         }
         catch (InvalidInputException e) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());

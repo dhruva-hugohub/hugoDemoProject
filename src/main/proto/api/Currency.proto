@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.currency;
+
+option java_multiple_files = true;
+
+message CurrencyResponseDTO {
+  string currency_code = 1;
+  string currency_name = 2;
+  double value = 3;
+}
+
+message CurrencyRequestDTO{
+
+  string currency_code = 1;
+  optional string currency_name = 2;
+  optional double value = 3;
+}

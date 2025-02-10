@@ -28,11 +28,13 @@ message CreateOrderRequestDTO {
   optional double amount = 4;
   optional double quantity = 5;
   enums.typeOfTransaction.TransactionType transaction_type = 6;
+  string currency_code = 7;
 }
 
 message EditOrderRequestDTO {
   int64 order_id = 1;
   string order_status = 2;
+  string currency_code = 3;
 }
 
 message OrderResponseDTO {

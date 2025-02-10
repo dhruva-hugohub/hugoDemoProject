@@ -207,4 +207,26 @@ public final class SQLQueryConstants {
         INSERT INTO Alert (userId, metalId, providerId, FcmToken, email, minPrice, maxPrice, typeOfAlert, expirationDate) VALUES (:userId, :metalId, :providerId, :FcmToken, :email, :minPrice, :maxPrice, :typeOfAlert, :expirationDate)
         """;
 
+
+    // Currency Queries
+    public static final String ADD_CURRENCY = """
+            INSERT INTO Currency (currencyCode, currencyName, value)
+            VALUES (currencyCode, currencyName, value)
+        """;
+
+    public static final String UPDATE_CURRENCY_BASE_QUERY = """
+            UPDATE Currency SET 
+        """;
+
+    public static final String DELETE_CURRENCY = """
+            DELETE FROM Currency
+            WHERE currencyCode = :currencyCode
+        """;
+
+    public static final String FETCH_DETAILS_BY_CURRENCY_CODE = """
+            SELECT * FROM Currency WHERE currencyCode = :currencyCode
+        """;
+
+    public static final String FETCH_ALL_CURR = """
+        SELECT * FROM Currency """;
 }

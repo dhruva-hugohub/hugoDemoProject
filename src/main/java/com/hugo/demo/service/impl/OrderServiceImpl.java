@@ -8,9 +8,9 @@ import com.hugo.demo.api.order.CreateOrderRequestDTO;
 import com.hugo.demo.api.order.EditOrderRequestDTO;
 import com.hugo.demo.api.order.Order;
 import com.hugo.demo.api.order.OrderResponseDTO;
-import com.hugo.demo.api.order.PaginatedProviders;
 import com.hugo.demo.api.plainResponseProto.PlainResponseDTO;
 import com.hugo.demo.constants.ResourceConstants;
+import com.hugo.demo.currency.CurrencyEntity;
 import com.hugo.demo.enums.typeOfTransaction.TransactionType;
 import com.hugo.demo.exception.CommonStatusCode;
 import com.hugo.demo.exception.GenericException;
@@ -18,6 +18,7 @@ import com.hugo.demo.exception.InternalServerErrorException;
 import com.hugo.demo.exception.InvalidInputException;
 import com.hugo.demo.exception.RecordAlreadyExistsException;
 import com.hugo.demo.exception.RecordNotFoundException;
+import com.hugo.demo.facade.CurrencyFacade;
 import com.hugo.demo.facade.OrderFacade;
 import com.hugo.demo.facade.ProductFacade;
 import com.hugo.demo.facade.UserQuantityFacade;
@@ -27,7 +28,6 @@ import com.hugo.demo.order.OrderFilter;
 import com.hugo.demo.order.PaginatedOrders;
 import com.hugo.demo.product.ProductEntity;
 import com.hugo.demo.queues.OrderQueueService;
-import com.hugo.demo.queues.RefundQueueService;
 import com.hugo.demo.service.OrderService;
 import com.hugo.demo.userquantity.UserQuantityEntity;
 import com.hugo.demo.util.ProtoJsonUtil;
@@ -37,7 +37,6 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.filter.OrderedFilter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -55,20 +54,20 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderQueueService orderQueueService;
 
-    private final RefundQueueService refundQueueService;
-
     private final UserQuantityFacade userQuantityFacade;
+
+    private final CurrencyFacade currencyFacade;
 
 
     @Autowired
     public OrderServiceImpl(OrderFacade orderFacade, WalletFacade walletFacade, ProductFacade productFacade,
-                            OrderQueueService orderQueueService, RefundQueueService refundQueueService, UserQuantityFacade userQuantityFacade) {
+                            OrderQueueService orderQueueService, UserQuantityFacade userQuantityFacade, CurrencyFacade currencyFacade) {
         this.orderFacade = orderFacade;
         this.walletFacade = walletFacade;
         this.productFacade = productFacade;
         this.orderQueueService = orderQueueService;
-        this.refundQueueService = refundQueueService;
         this.userQuantityFacade = userQuantityFacade;
+        this.currencyFacade = currencyFacade;
     }
 
 
@@ -79,13 +78,16 @@ public class OrderServiceImpl implements OrderService {
             // Validating UserId, ProviderId (Optional Check) , MetalId, TransactionType, Amount (Optional Check).
             ValidationUtil.validateCreateOrderRequest(orderRequestDTO);
 
+            CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(orderRequestDTO.getCurrencyCode());
+            double currencyValue = currencyEntity.getValue();
+
             // Set Order Entity Quantity if order type is SELL or Set Amount if order type is BUY.
             OrderEntity orderEntity;
             orderEntity = OrderEntity.newBuilder().setMetalId(orderRequestDTO.getMetalId())
                 .setProviderId(orderRequestDTO.getProviderId())
                 .setUserId(orderRequestDTO.getUserId())
                 .setOrderStatus(ResourceConstants.PENDING)
-                .setAmount(orderRequestDTO.getTransactionType() == TransactionType.BUY ? orderRequestDTO.getAmount() : 0.00)
+                .setAmount(orderRequestDTO.getTransactionType() == TransactionType.BUY ? orderRequestDTO.getAmount() / currencyValue : 0.00)
                 .setQuantity(orderRequestDTO.getTransactionType() == TransactionType.SELL ? orderRequestDTO.getQuantity() : 0.00)
                 .setTypeOfTransaction(orderRequestDTO.getTransactionType())
                 .build();
@@ -125,11 +127,14 @@ public class OrderServiceImpl implements OrderService {
 
             OrderEntity updatedOrderEntity = orderFacade.updateOrderStatus(orderEntity);
 
+            CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(orderRequestDTO.getCurrencyCode());
+            double currencyValue = currencyEntity.getValue();
+
             Order updatedOrderResponse =
                 Order.newBuilder().setMetalId(updatedOrderEntity.getMetalId()).setProviderId(updatedOrderEntity.getProviderId())
                     .setUserId(updatedOrderEntity.getUserId()).setAmount(updatedOrderEntity.getAmount())
                     .setOrderStatus(updatedOrderEntity.getOrderStatus()).setClosingBalance(updatedOrderEntity.getClosingBalance())
-                    .setAmount(updatedOrderEntity.getAmount()).setTransactionType(updatedOrderEntity.getTypeOfTransaction())
+                    .setAmount(updatedOrderEntity.getAmount()/ currencyValue).setTransactionType(updatedOrderEntity.getTypeOfTransaction())
                     .setQuantity(updatedOrderEntity.getQuantity()).build();
 
             return OrderResponseDTO.newBuilder().setOrder(updatedOrderResponse).build();
@@ -143,10 +148,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO getOrderDetailsByOrderId(long orderId) {
+    public OrderResponseDTO getOrderDetailsByOrderId(long orderId, String currencyCode) {
         Optional<OrderEntity> orderEntity = orderFacade.getOrderDetailsByOrderId(orderId);
 
         OrderEntity updatedOrderEntity;
+
+        CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(currencyCode);
+        double currencyValue = currencyEntity.getValue();
 
         if (orderEntity.isPresent()) {
             updatedOrderEntity = orderEntity.get();
@@ -156,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order updatedOrderResponse = Order.newBuilder().setOrderId(updatedOrderEntity.getOrderId()).setMetalId(updatedOrderEntity.getMetalId())
             .setProviderId(updatedOrderEntity.getProviderId())
-            .setUserId(updatedOrderEntity.getUserId()).setAmount(updatedOrderEntity.getAmount()).setOrderStatus(updatedOrderEntity.getOrderStatus())
+            .setUserId(updatedOrderEntity.getUserId()).setAmount(updatedOrderEntity.getAmount() * currencyValue).setOrderStatus(updatedOrderEntity.getOrderStatus())
             .setClosingBalance(updatedOrderEntity.getClosingBalance())
             .setTransactionType(updatedOrderEntity.getTypeOfTransaction()).setQuantity(updatedOrderEntity.getQuantity()).build();
 
@@ -294,7 +302,6 @@ public class OrderServiceImpl implements OrderService {
             orderFacade.updateOrderStatus(updatedOrderEntity);
             orderQueueService.deleteMessageFromQueue(message.receiptHandle());
         } catch (Exception e) {
-            refundQueueService.sendRefundToQueue(orderEntity);
             throw new InternalServerErrorException("Error occurred when finalizing order processing", e);
         }
     }

@@ -43,8 +43,8 @@ public class WalletController {
     }
 
     @GetMapping("/wallet-details")
-    public ApiResponse walletDetails(@RequestParam Long userId) {
-        WalletResponseDTO walletResponseDTO = walletService.findWalletID(userId,"userId");
+    public ApiResponse walletDetails(@RequestParam Long userId, @RequestParam(defaultValue = "USD", required = false) String currencyCode) {
+        WalletResponseDTO walletResponseDTO = walletService.findWalletID(userId,"userId", currencyCode );
         return ResponseUtil.buildResponse(CommonStatusCode.SUCCESS, walletResponseDTO);
     }
 }

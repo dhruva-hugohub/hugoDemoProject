@@ -45,8 +45,8 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ApiResponse getOrderDetails(@PathVariable int orderId) {
-        OrderResponseDTO orderResponseDTO = orderService.getOrderDetailsByOrderId(orderId);
+    public ApiResponse getOrderDetails(@PathVariable int orderId, @RequestParam(required = false , defaultValue = "USD") String currencyCode) {
+        OrderResponseDTO orderResponseDTO = orderService.getOrderDetailsByOrderId(orderId, currencyCode);
         return ResponseUtil.buildResponse(CommonStatusCode.SUCCESS, orderResponseDTO);
     }
 

@@ -48,7 +48,8 @@ public class LiveItemPriceController {
         @RequestParam(required = false, defaultValue = "0.0") Double valueLowerLimit,
         @RequestParam(defaultValue = "dateTime") String sortBy,
         @RequestParam(defaultValue = "1") Integer page,
-        @RequestParam(defaultValue = "10") Integer pageSize
+        @RequestParam(defaultValue = "10") Integer pageSize,
+        @RequestParam(defaultValue= "USD") String currencyCode
     ) {
         LiveItemPriceFilter liveItemPriceFilter = LiveItemPriceFilter.newBuilder()
             .setMetalId(metalId)
@@ -64,6 +65,7 @@ public class LiveItemPriceController {
             .setValueUpperLimit(valueUpperLimit)
             .setValueLowerLimit(valueLowerLimit)
             .setSortBy(sortBy)
+            .setCurrencyCode(currencyCode)
             .build();
 
         PaginatedLiveItemPrice paginatedLiveItemPrices = liveItemPriceService.fetchLiveItemPrices(liveItemPriceFilter);
