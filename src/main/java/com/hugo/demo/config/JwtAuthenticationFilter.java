@@ -2,6 +2,8 @@ package com.hugo.demo.config;
 
 import java.io.IOException;
 
+import com.hugo.demo.service.TokenBlackList;
+import com.hugo.demo.util.CommonUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,10 +24,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final CustomUserDetailsService customUserDetailsService;
 
+    private final TokenBlackList tokenBlackList;
+
     @Autowired
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService, TokenBlackList tokenBlackList) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.customUserDetailsService = customUserDetailsService;
+        this.tokenBlackList = tokenBlackList;
     }
 
     @Override
@@ -34,10 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = getTokenFromRequest(request);
 
-        if (StringUtils.hasText(token)) {
+        if (StringUtils.hasText(token) && !tokenBlackList.isBlacklisted(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
+            String clientIpAddress = CommonUtil.getClientIp(request);
 
-            if (StringUtils.hasText(username) && jwtTokenProvider.validateToken(token, username)) {
+            if (StringUtils.hasText(username) && jwtTokenProvider.validateToken(token, username, clientIpAddress)) {
 
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
@@ -62,4 +68,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         return null;
     }
+
+
 }

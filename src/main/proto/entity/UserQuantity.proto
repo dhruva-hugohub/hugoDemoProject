@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package com.hugo.demo.userquantity;
+
+option java_multiple_files = true;
+
+
+message UserQuantityEntity {
+  int64 user_id = 1;
+  string metal_id = 2;
+  double quantity = 3;
+}
+
+

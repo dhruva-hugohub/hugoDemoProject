@@ -5,26 +5,37 @@ package com.hugo.demo.api.provider;
 option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
+import "entity/Provider.proto";
+
+message Provider {
+  int32 providerId = 1;
+  string providerName = 2;
+  string providerAPIUrl = 3;
+  string schedulerTimePeriod = 4;
+}
 
 message AddProviderRequestDTO {
   string providerName = 1;
   string providerAPIUrl = 2;
+  string schedulerTimePeriod = 3;
 }
 
 message EditProviderRequestDTO {
   int32 providerId = 1;
   string providerName = 2;
   string providerAPIUrl = 3;
+  string schedulerTimePeriod = 4;
 }
 
 message ProviderResponseDTO {
-  int32 providerId = 1;
-  string providerName = 2;
-  string providerAPIUrl = 3;
-  google.protobuf.Timestamp createTs = 4;
-  google.protobuf.Timestamp updateTs = 5;
+  Provider provider = 1;
 }
 
-message AllProvidersResponseDTO {
-  repeated ProviderResponseDTO providers = 1;
+message PaginatedProviders {
+  repeated com.hugo.demo.provider.ProviderEntity providers = 1;
+  int32 totalItems = 2;
+  int32 totalPages = 3;
+  int32 currentPage = 4;
+  bool hasNextPage = 5;
+  bool hasPreviousPage = 6;
 }

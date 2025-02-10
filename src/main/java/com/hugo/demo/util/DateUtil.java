@@ -8,6 +8,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
 import com.google.protobuf.Timestamp;
+import com.hugo.demo.exception.CommonStatusCode;
+import com.hugo.demo.exception.InvalidInputException;
 
 public class DateUtil {
 
@@ -26,43 +28,45 @@ public class DateUtil {
             .build();
     }
 
-    public static Timestamp convertSqlTimestampToProtoTimestamp(java.sql.Timestamp sqlTimestamp) {
-        if (sqlTimestamp == null) {
+    public static java.sql.Timestamp convertProtoTimestampToSqlTimestamp(Timestamp protoTimestamp) {
+        if (protoTimestamp == null) {
             return null;
         }
-
-        long seconds = sqlTimestamp.getTime() / 1000;  // Convert milliseconds to seconds
-        int nanos = (int) (sqlTimestamp.getNanos());  // Get the nanos part
-
-        // Create and return a new google.protobuf.Timestamp
-        return Timestamp.newBuilder()
-            .setSeconds(seconds)
-            .setNanos(nanos)
-            .build();
+        Instant instant = Instant.ofEpochSecond(protoTimestamp.getSeconds(), protoTimestamp.getNanos());
+        return java.sql.Timestamp.from(instant);
     }
 
-    // Custom method to convert date string with timezone to Timestamp
+    public static Timestamp convertSqlTimestampToProtoTimestamp(java.sql.Timestamp sqlTimestamp) {
+        try {
+            if (sqlTimestamp == null) {
+                return null;
+            }
+
+            long seconds = sqlTimestamp.getTime() / 1000;
+            int nanos = (sqlTimestamp.getNanos());
+
+            return Timestamp.newBuilder()
+                .setSeconds(seconds)
+                .setNanos(nanos)
+                .build();
+        } catch (Exception e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        }
+    }
+
     public static java.sql.Timestamp convertStringToTimestamp(String dateTimeString) {
         if (dateTimeString == null || dateTimeString.isEmpty()) {
             return null;
         }
 
         try {
-            // Define the format of the date string including the timezone
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
             java.util.Date parsedDate = sdf.parse(dateTimeString);
-            return new java.sql.Timestamp (parsedDate.getTime());  // Convert to java.sql.Timestamp
+            return new java.sql.Timestamp(parsedDate.getTime());
         } catch (ParseException e) {
-            throw new RuntimeException("Invalid date format: " + dateTimeString, e);
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Invalid date format: " + dateTimeString);
         }
     }
-
-    public static String convertTimestampToDateString(Timestamp timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        return sdf.format(timestamp);
-    }
-
-
 }

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.alert;
+
+option java_multiple_files = true;
+import "enums/AlertType.proto";
+
+message FcmUpdateProto {
+  int64 user_id = 1;
+  optional string metal_id = 2;
+  optional int64 provider_id = 3;
+  string fcm_token = 4;
+}
+
+message CreateAlertRequestDTO{
+  int64 user_id = 1;
+  string metal_id = 2;
+  int64 provider_id = 3;
+  double min_price = 4;
+  double max_price = 5;
+  string email = 6;
+  string fcm_token = 7;
+  enums.alertType.TypeOfAlert type_of_alert = 9;
+}
+
+message EditAlertRequestDTO{
+  int64 user_id = 1;
+  string metal_id = 2;
+  int64 provider_id = 3;
+  double min_price = 4;
+  double max_price = 5;
+  optional string email = 6;
+  optional string fcm_token = 7;
+}
+
+message AlertResponseDTO{
+  int64 user_id = 1;
+  string metal_id = 2;
+  int64 provider_id = 3;
+  double min_price = 4;
+  double max_price = 5;
+  string email = 6;
+  string fcm_token = 7;
+  enums.alertType.TypeOfAlert type_of_alert = 9;
+}

@@ -36,24 +36,7 @@ public class ResponseUtil {
         return builder.build();
     }
 
-//    /**
-//     * This Method takes the given inputs and returns ApiResponse.
-//     *
-//     * @param headers        headers we need to pass to the UI/other caller apps.
-//     * @param paginationData Paginated data to return to clients.
-//     * @return ApiResponse incorporated with the above input params.
-//     */
-//    public static <T extends Message> ApiResponse buildPaginatedResponse(ApiStatusCode headers,
-//                                                                         PaginationUtils.PaginatedResponseRecord<T> paginationData) {
-//        return ApiResponse.newBuilder()
-//            .setHeaders(buildApiResponseHeader(headers))
-//            .setData(Any.pack(paginationData.dto()))
-//            .setPageToken(paginationData.pageToken())
-//            .setHasMorePages(paginationData.hasMorePages())
-//            .setReversePageToken(paginationData.reversePageToken())
-//            .setHasMoreReversePages(paginationData.hasMoreReversePages())
-//            .build();
-//    }
+
 
     public static ApiResponseHeader buildApiResponseHeader(ApiStatusCode headers) {
         return ApiResponseHeader.newBuilder()

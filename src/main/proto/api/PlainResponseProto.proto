@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.plainResponseProto;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message PlainResponseDTO {
+  string message = 1;
+}

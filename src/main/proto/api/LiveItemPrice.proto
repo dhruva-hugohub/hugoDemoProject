@@ -14,4 +14,5 @@ message LiveItemPriceAPIResponseDTO {
   double value = 6;
   double performance = 7;
   string metal_id = 8;
+  int64  provider_id = 9;
 }

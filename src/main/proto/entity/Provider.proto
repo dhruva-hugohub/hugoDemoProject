@@ -10,6 +10,5 @@ message ProviderEntity {
   int32 providerId = 1;
   string providerName = 2;
   string providerAPIUrl = 3;
-  google.protobuf.Timestamp createTs = 4;
-  google.protobuf.Timestamp updateTs = 5;
+  string schedulerTimePeriod = 4;
 }

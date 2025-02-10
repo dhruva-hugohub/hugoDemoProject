@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.userquantity;
+
+option java_multiple_files = true;
+
+
+message CreateUserQuantityRequestDTO {
+  int64 user_id = 1;
+  string metal_id = 2;
+  double quantity = 3;
+}
+
+message EditUserQuantityRequestDTO {
+  int64 user_id = 1;
+  string metal_id = 2;
+  double quantity = 3;
+}
+
+message UserQuantityResponseDTO {
+  int64 user_id = 1;
+  string metal_id = 2;
+  double quantity = 3;
+}

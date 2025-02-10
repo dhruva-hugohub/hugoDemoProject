@@ -14,10 +14,7 @@ message UserEntity {
   string email = 4;
   string pin_hash = 5;
   string password_hash = 6;
-  string token = 7;
-  google.protobuf.Timestamp token_expiry = 8;
-  google.protobuf.Timestamp created_at = 9;
-  google.protobuf.Timestamp updated_at = 10;
+  string profile_image = 7;
 }
 
 

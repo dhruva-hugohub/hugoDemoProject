@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.hugo.demo.dao.DayItemPriceDAO;
 import com.hugo.demo.dao.SQLQueryConstants;
 import com.hugo.demo.dateItemPrice.DateItemPriceEntity;
+import com.hugo.demo.exception.InternalServerErrorException;
 import com.hugo.demo.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,55 +34,89 @@ public class DayItemPriceDAOImpl implements DayItemPriceDAO {
     public DateItemPriceEntity addRecord(DateItemPriceEntity dayItemPriceEntity) {
         String sql = SQLQueryConstants.ADD_DATE_ITEM_RECORD;
 
-        Optional<DateItemPriceEntity> existingItem = getRecord(dayItemPriceEntity.getMetalId(), dayItemPriceEntity.getDate());
-
-        if (existingItem.isPresent()) {
-            return editRecord(dayItemPriceEntity);
-        }
-
         MapSqlParameterSource params =
-            new MapSqlParameterSource().addValue("metalId", dayItemPriceEntity.getMetalId()).addValue("date", dayItemPriceEntity.getDate())
-                .addValue("openPrice", dayItemPriceEntity.getOpen()).addValue("closePrice", dayItemPriceEntity.getClose())
-                .addValue("highPrice", dayItemPriceEntity.getHigh()).addValue("lowPrice", dayItemPriceEntity.getLow());
+            new MapSqlParameterSource().addValue("metalId", dayItemPriceEntity.getMetalId())
+                .addValue("providerId", dayItemPriceEntity.getProviderId())
+                .addValue("date", dayItemPriceEntity.getDate())
+                .addValue("openPrice", dayItemPriceEntity.getOpen())
+                .addValue("closePrice", dayItemPriceEntity.getClose())
+                .addValue("highPrice", dayItemPriceEntity.getHigh())
+                .addValue("lowPrice", dayItemPriceEntity.getLow());
 
-        int rowsAffected = namedParameterJdbcTemplate.update(sql, params);
+        try {
+            executeUpdate(sql, params, "Failed to add item");
 
-        if (rowsAffected > 0) {
-            return getRecord(dayItemPriceEntity.getMetalId(), dayItemPriceEntity.getDate()).orElseThrow(
-                () -> new RuntimeException("Item could not be added"));
+            return getRecord(dayItemPriceEntity.getMetalId(), dayItemPriceEntity.getDate(), dayItemPriceEntity.getProviderId())
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+        } catch (InternalServerErrorException e) {
+            throw new InternalServerErrorException("Failed to add item", e);
         }
-        return null;
     }
 
     @Override
     public DateItemPriceEntity editRecord(DateItemPriceEntity dayItemPriceEntity) {
-        String sql = SQLQueryConstants.UPDATE_DATE_ITEM_RECORD;
+        StringBuilder query = buildUpdateDayItemBaseQuery();
+        boolean hasPrevious = false;
 
         MapSqlParameterSource params =
-            new MapSqlParameterSource().addValue("metalId", dayItemPriceEntity.getMetalId()).addValue("date", dayItemPriceEntity.getDate())
-                .addValue("openPrice", dayItemPriceEntity.getOpen() != 0.00 ? dayItemPriceEntity.getOpen() : null)
-                .addValue("closePrice", dayItemPriceEntity.getClose() != 0.00 ? dayItemPriceEntity.getClose() : null)
-                .addValue("highPrice", dayItemPriceEntity.getHigh() != 0.00 ? dayItemPriceEntity.getHigh() : null)
-                .addValue("lowPrice", dayItemPriceEntity.getLow() != 0.00 ? dayItemPriceEntity.getLow() : null);
-
-        int rowsAffected = namedParameterJdbcTemplate.update(sql, params);
-
-        if (rowsAffected > 0) {
-            return getRecord(dayItemPriceEntity.getMetalId(), dayItemPriceEntity.getDate()).orElseThrow(
-                () -> new RuntimeException("Item not found after editing"));
+            new MapSqlParameterSource();
+        if (dayItemPriceEntity.getOpen() != 0.00) {
+            query.append("openPrice = :openPrice");
+            params.addValue("openPrice", dayItemPriceEntity.getOpen());
+            hasPrevious = true;
         }
-        return null;
+        if (dayItemPriceEntity.getClose() != 0.00) {
+            if (hasPrevious) {
+                query.append(", ");
+            }
+            query.append("closePrice = :closePrice");
+            params.addValue("closePrice", dayItemPriceEntity.getClose());
+            hasPrevious = true;
+        }
+        if (dayItemPriceEntity.getLow() != 0.00) {
+            if (hasPrevious) {
+                query.append(", ");
+            }
+            query.append("lowPrice = :lowPrice");
+            params.addValue("lowPrice", dayItemPriceEntity.getLow());
+            hasPrevious = true;
+        }
+        if (dayItemPriceEntity.getHigh() != 0.00) {
+            if (hasPrevious) {
+                query.append(", ");
+            }
+            query.append("highPrice = :highPrice");
+            params.addValue("highPrice", dayItemPriceEntity.getHigh());
+        }
+        query.append(" WHERE metalId = :metalId AND providerId = :providerId AND date = :date");
+
+
+        params.addValue("providerId", dayItemPriceEntity.getProviderId());
+        params.addValue("date", dayItemPriceEntity.getDate());
+        params.addValue("metalId", dayItemPriceEntity.getMetalId());
+
+        try {
+            executeUpdate(query.toString(), params, "Failed to edit item");
+
+            return getRecord(dayItemPriceEntity.getMetalId(), dayItemPriceEntity.getDate(), dayItemPriceEntity.getProviderId())
+                .orElseThrow(() -> new RuntimeException("Item not found after editing"));
+        } catch (InternalServerErrorException e) {
+            throw new InternalServerErrorException("Failed to edit item", e);
+        }
     }
 
     @Override
-    public Optional<DateItemPriceEntity> getRecord(String metalId, String date) {
-        String sql = SQLQueryConstants.FETCH_DAY_ITEM_PRICE;
-
-        return getDateItemPriceEntity(metalId, date, sql);
+    public Optional<DateItemPriceEntity> getRecord(String metalId, String date, long providerId) {
+        StringBuilder sql = buildFindDayItemBaseQuery();
+        sql.append(" AND metalId = :metalId AND providerId = :providerId AND date = :date");
+        return getDateItemPriceEntity(metalId, date, providerId, sql.toString());
     }
 
-    private Optional<DateItemPriceEntity> getDateItemPriceEntity(String metalId, String date, String sql) {
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("metalId", metalId).addValue("date", date);
+    private Optional<DateItemPriceEntity> getDateItemPriceEntity(String metalId, String date, long providerId, String sql) {
+        MapSqlParameterSource params =
+            new MapSqlParameterSource().addValue("metalId", metalId)
+                .addValue("date", date)
+                .addValue("providerId", providerId);
 
         try {
             return namedParameterJdbcTemplate.query(sql, params, rs -> {
@@ -91,7 +126,7 @@ public class DayItemPriceDAOImpl implements DayItemPriceDAO {
                 return Optional.empty();
             });
         } catch (DataAccessException e) {
-            logger.error("Error occurred while fetching item record for metalId: {} and dateTime: {}", metalId, date, e);
+            logger.error("Error occurred while fetching item record for metalId: {} and date: {}", metalId, date, e);
             return Optional.empty();
         }
     }
@@ -150,9 +185,34 @@ public class DayItemPriceDAOImpl implements DayItemPriceDAO {
         return namedParameterJdbcTemplate.query(query, additionalParams, (rs, rowNum) -> mapRowToDateItemPriceEntity(rs));
     }
 
+    private StringBuilder buildFindDayItemBaseQuery() {
+        return new StringBuilder(SQLQueryConstants.FETCH_DATE_ITEM_RECORD_BASE_QUERY);
+    }
+
+    private StringBuilder buildUpdateDayItemBaseQuery() {
+        return new StringBuilder(SQLQueryConstants.UPDATE_DATE_ITEM_RECORD_BASE_QUERY);
+    }
+
+    private void executeUpdate(String sql, MapSqlParameterSource params, String errorMessage) {
+        try {
+            int rowsAffected = namedParameterJdbcTemplate.update(sql, params);
+            if (rowsAffected == 0) {
+                throw new InternalServerErrorException(errorMessage);
+            }
+
+        } catch (Exception e) {
+            throw new InternalServerErrorException(errorMessage, e);
+        }
+    }
+
     private DateItemPriceEntity mapRowToDateItemPriceEntity(ResultSet rs) throws SQLException {
-        return DateItemPriceEntity.newBuilder().setMetalId(rs.getString("metalId")).setDate(rs.getString("date")).setOpen(rs.getDouble("openPrice"))
-            .setClose(rs.getDouble("closePrice")).setHigh(rs.getDouble("highPrice")).setLow(rs.getDouble("lowPrice"))
+        return DateItemPriceEntity.newBuilder().setMetalId(rs.getString("metalId"))
+            .setProviderId(rs.getInt("providerId"))
+            .setDate(rs.getString("date"))
+            .setOpen(rs.getDouble("openPrice"))
+            .setClose(rs.getDouble("closePrice"))
+            .setHigh(rs.getDouble("highPrice"))
+            .setLow(rs.getDouble("lowPrice"))
             .setCreatedAt(DateUtil.convertToProtoTimestamp(rs.getTimestamp("create_ts")))
             .setUpdatedAt(DateUtil.convertToProtoTimestamp(rs.getTimestamp("update_ts"))).build();
     }

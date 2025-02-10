@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.dateItemPrice;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+
+message SaveItemPriceRequestDTO {
+  string metal_id = 1;
+  int64 provider_id = 2;
+  string date = 3;
+  string base_api_url = 4;
+  string currency_code = 5;
+  string weight_unit = 6;
+}
+
+message EditItemPriceRequestDTO {
+  string metal_id = 1;
+  int64 provider_id = 2;
+  string date = 3;
+  string base_api_url = 4;
+  string currency_code = 5;
+  string weight_unit = 6;
+}
+
+message DateItemPriceAPIResponseDTO {
+  string date = 1;
+  string weight_unit = 2;
+  double open = 3;
+  double close = 4;
+  double high = 5;
+  double low = 6;
+  string metal_id = 7;
+  int64 provider_id = 8;
+}
+
+message PerformanceMetrics {
+  double five_day = 1;
+  double one_month = 2;
+  double year_to_date = 3;
+  double one_year = 4;
+  double five_years = 5;
+  double ten_years = 6;
+  double max = 7;
+}
+
+message HistoricalDateItemPriceAPIResponseDTO {
+  string metal = 1;
+  string currency = 2;
+  string weight_unit = 3;
+  repeated DateItemPriceAPIResponseDTO items = 4;
+  PerformanceMetrics performances = 5;
+}

@@ -36,14 +36,20 @@ dependencies {
 
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
     implementation 'com.google.protobuf:protobuf-java:4.29.2'
-    implementation 'com.hubspot.jackson:jackson-datatype-protobuf:0.9.12'
+    implementation 'com.hubspot.jackson:jackson-datatype-protobuf:0.9.17'
     implementation 'com.google.protobuf:protobuf-java-util:4.29.3'
 
     implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
 
+    testImplementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs:3.3.0'
+    implementation 'software.amazon.awssdk:sqs:2.30.10'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    implementation 'com.google.firebase:firebase-admin:9.4.3'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     compileOnly 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

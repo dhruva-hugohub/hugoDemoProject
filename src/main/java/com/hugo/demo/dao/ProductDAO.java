@@ -1,8 +1,11 @@
 package com.hugo.demo.dao;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.hugo.demo.product.PaginatedProducts;
 import com.hugo.demo.product.ProductEntity;
+import com.hugo.demo.product.ProductFilter;
 
 public interface ProductDAO {
 
@@ -10,15 +13,15 @@ public interface ProductDAO {
 
     ProductEntity updateProduct(ProductEntity product);
 
-    void deleteProduct(String metalId, int providerId);
+    boolean deleteProduct(String metalId, long providerId);
 
-    List<ProductEntity> getAllProducts(String sortField, String sortOrder, Integer page, Integer size);
+    Optional<ProductEntity> fetchProductDetails(Long providerId, String metalId);
 
-    List<ProductEntity> getProductsByProviderId(int providerId, String sortField, String sortOrder, Integer page, Integer size);
+    PaginatedProducts fetchProducts(ProductFilter filter);
 
-    List<ProductEntity> getProductsByMetalCode(String metalId, String sortField, String sortOrder, Integer page, Integer size);
+    List<ProductEntity> fetchAllProducts();
 
-    int getTotalItems();
+    boolean isProductExists(Long providerId, String metalId);
 
-    int getTotalPages(int pageSize);
+    void updateStock(long providerId, String metalId, int stock);
 }

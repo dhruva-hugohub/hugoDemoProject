@@ -8,13 +8,40 @@ import "google/protobuf/timestamp.proto";
 
 message DateItemPriceEntity {
   string metal_id = 1;
-  double open = 2;
-  double close = 3;
-  double high = 4;
-  double low = 5;
-  string date = 6;
-  google.protobuf.Timestamp created_at = 7;
-  google.protobuf.Timestamp updated_at = 8;
+  int64 provider_id = 2;
+  double open = 3;
+  double close = 4;
+  double high = 5;
+  double low = 6;
+  string date = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message DateItemPriceFilter {
+  string metal_id = 1;
+  int64 provider_id = 2;
+  double open_lower_limit = 3;
+  double open_upper_limit = 4;
+  double close_lower_limit = 5;
+  double close_upper_limit = 6;
+  double high_lower_limit = 7;
+  double high_upper_limit = 8;
+  double low_lower_limit = 9;
+  double low_upper_limit = 10;
+  string start_date = 11;
+  string end_date = 12;
+  string sort_by = 13;
+  int32 page = 14;
+  int32 page_size = 15;
+}
+
+message PaginatedDateItemPrice {
+  repeated DateItemPriceEntity date_item_prices = 1;
+  int32 total_items = 2;
+  int32 total_pages = 3;
+  bool has_previous_page = 4;
+  bool has_next_page = 5;
 }
 
 
