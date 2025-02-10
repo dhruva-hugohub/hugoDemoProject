@@ -2,6 +2,8 @@ package com.hugo.demo.service.impl;
 
 import com.hugo.demo.config.JwtTokenProvider;
 import com.hugo.demo.service.AuthService;
+import com.hugo.demo.util.CommonUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,16 +24,19 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String login(String email, String password) {
+    public String login(String email, String password, HttpServletRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
             email,
-           password
+            password
         ));
-
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return jwtTokenProvider.generateToken(authentication);
+        String clientIpAddress = CommonUtil.getClientIp(request);
+
+        return jwtTokenProvider.generateToken(authentication, clientIpAddress);
     }
+
+
 }

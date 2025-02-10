@@ -23,20 +23,20 @@ public class GlobalExceptionHandler {
     public ApiResponse handleInvalidInputException(Exception ex) {
         LOG.error("Unexpected exception occurred: {}", ex.getMessage(), ex);
 
-        return buildApiResponse(buildApiResponseHeader(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR));
+        return buildApiResponse(buildApiResponseHeader(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR.getStatusCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(value = {RecordAlreadyExistsException.class})
     public ApiResponse handleDuplicateRecordException(RecordAlreadyExistsException ex) {
         LOG.error("Unexpected exception occurred: {}", ex.getMessage(), ex);
-        return buildApiResponse(buildApiResponseHeader(CommonStatusCode.DUPLICATE_RECORD_ERROR));
+        return buildApiResponse(buildApiResponseHeader(CommonStatusCode.DUPLICATE_RECORD_ERROR.getStatusCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(value = {HttpServerErrorException.InternalServerError.class, NullPointerException.class, NoSuchMethodException.class,
         InternalServerErrorException.class})
     protected ApiResponse handleInternalServerError(Exception ex) {
         LOG.error("Unexpected exception occurred: {}", ex.getMessage(), ex);
-        return buildApiResponse(buildApiResponseHeader(CommonStatusCode.INTERNAL_SERVER_ERROR));
+        return buildApiResponse(buildApiResponseHeader(CommonStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage()));
     }
 
     private ApiResponse buildApiResponse(ApiResponseHeader errorResponseHeader) {

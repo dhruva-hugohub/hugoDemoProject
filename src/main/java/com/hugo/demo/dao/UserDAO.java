@@ -7,9 +7,15 @@ import com.hugo.demo.user.UserEntity;
 public interface UserDAO {
     Optional<UserEntity> findByEmailAddress(String emailAddress);
 
-    boolean existsByEmailAddress(String emailAddress);
+    Optional<UserEntity> findByUserId(long userId);
+
+    boolean checkExistsByUser(String field, String value);
 
     UserEntity save(UserEntity userEntity);
 
-    UserEntity updateToken(UserEntity userEntity);
+    UserEntity updateUser(UserEntity user);
+
+    boolean deleteUser(long userId);
+
+    boolean updateUserCredentials(UserEntity user);
 }

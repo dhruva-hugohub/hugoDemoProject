@@ -1,35 +1,51 @@
 package com.hugo.demo.service.impl;
 
-import java.util.List;
+import java.util.Optional;
 
+import com.hugo.demo.api.plainResponseProto.PlainResponseDTO;
 import com.hugo.demo.api.product.AddProductRequestDTO;
-import com.hugo.demo.api.product.AllProductsResponseDTO;
 import com.hugo.demo.api.product.DeleteProductRequestDTO;
 import com.hugo.demo.api.product.EditProductRequestDTO;
-import com.hugo.demo.api.product.GetProductsByMetalCodeRequestDTO;
-import com.hugo.demo.api.product.GetProductsByMetalCodeResponseDTO;
-import com.hugo.demo.api.product.GetProductsByProviderIdRequestDTO;
-import com.hugo.demo.api.product.GetProductsByProviderIdResponseDTO;
 import com.hugo.demo.api.product.ProductResponseDTO;
-import com.hugo.demo.dao.ProductDAO;
+import com.hugo.demo.exception.CommonStatusCode;
+import com.hugo.demo.exception.GenericException;
+import com.hugo.demo.exception.InternalServerErrorException;
+import com.hugo.demo.exception.InvalidInputException;
+import com.hugo.demo.exception.RecordAlreadyExistsException;
+import com.hugo.demo.exception.RecordNotFoundException;
+import com.hugo.demo.facade.ProductFacade;
+import com.hugo.demo.product.PaginatedProducts;
 import com.hugo.demo.product.ProductEntity;
+import com.hugo.demo.product.ProductFilter;
 import com.hugo.demo.service.ProductService;
+import com.hugo.demo.util.ValidationUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final ProductDAO productDAO;
+    private final ProductFacade productFacade;
 
     @Autowired
-    public ProductServiceImpl(ProductDAO productDAO) {
-        this.productDAO = productDAO;
+    public ProductServiceImpl(ProductFacade productFacade) {
+        this.productFacade = productFacade;
     }
 
     @Override
+    @Transactional
     public ProductResponseDTO addProduct(AddProductRequestDTO addProductRequestDTO) {
         try {
+
+            ValidationUtil.validateAddProductRequest(addProductRequestDTO);
+
+            boolean isProductExists = productFacade.isProductExists(addProductRequestDTO.getProviderId(), addProductRequestDTO.getMetalId());
+            if (isProductExists) {
+                throw new RecordAlreadyExistsException(CommonStatusCode.DUPLICATE_RECORD_ERROR,
+                    "Provider with name '" + addProductRequestDTO.getProviderId() + "' already exists.");
+            }
+
             ProductEntity addProductEntity = ProductEntity.newBuilder()
                 .setMetalId(addProductRequestDTO.getMetalId())
                 .setProductName(addProductRequestDTO.getProductName())
@@ -38,7 +54,7 @@ public class ProductServiceImpl implements ProductService {
                 .setProductValue(addProductRequestDTO.getPrice())
                 .build();
 
-            ProductEntity productResponseEntity = productDAO.addProduct(addProductEntity);
+            ProductEntity productResponseEntity = productFacade.addProduct(addProductEntity);
 
             return ProductResponseDTO.newBuilder()
                 .setMetalId(productResponseEntity.getMetalId())
@@ -48,14 +64,28 @@ public class ProductServiceImpl implements ProductService {
                 .setPrice(productResponseEntity.getProductValue())
                 .build();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error adding product details", e);
+        } catch (InvalidInputException e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        } catch (RecordAlreadyExistsException e) {
+            throw new RecordAlreadyExistsException(CommonStatusCode.DUPLICATE_RECORD_ERROR, e.getMessage());
+        } catch (InternalServerErrorException e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
     @Override
+    @Transactional
     public ProductResponseDTO updateProduct(EditProductRequestDTO editProductRequestDTO) {
         try {
+            ValidationUtil.validateEditProductRequest(editProductRequestDTO);
+
+            boolean isProductExists = productFacade.isProductExists(editProductRequestDTO.getProviderId(), editProductRequestDTO.getMetalId());
+
+            if (!isProductExists) {
+                throw new RecordNotFoundException(CommonStatusCode.FAILED,
+                    "Product doesn't exist with providerId : " + editProductRequestDTO.getProviderId());
+            }
+
             ProductEntity editProductEntity = ProductEntity.newBuilder()
                 .setMetalId(editProductRequestDTO.getMetalId())
                 .setProviderId(editProductRequestDTO.getProviderId())
@@ -64,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
                 .setProductValue(editProductRequestDTO.getPrice())
                 .build();
 
-            ProductEntity updatedProductEntity = productDAO.updateProduct(editProductEntity);
+            ProductEntity updatedProductEntity = productFacade.updateProduct(editProductEntity);
 
             return ProductResponseDTO.newBuilder()
                 .setMetalId(updatedProductEntity.getMetalId())
@@ -74,123 +104,105 @@ public class ProductServiceImpl implements ProductService {
                 .setPrice(updatedProductEntity.getProductValue())
                 .build();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating product details", e);
+        } catch (InvalidInputException e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        } catch (RecordNotFoundException e) {
+            throw new RecordNotFoundException(CommonStatusCode.NOT_FOUND_ERROR, e.getMessage());
+        } catch (InternalServerErrorException e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
     @Override
-    public void deleteProduct(DeleteProductRequestDTO deleteProductRequestDTO) {
+    @Transactional
+    public PlainResponseDTO deleteProduct(DeleteProductRequestDTO deleteProductRequestDTO) {
         try {
-            productDAO.deleteProduct(deleteProductRequestDTO.getMetalId(), deleteProductRequestDTO.getProviderId());
-        } catch (Exception e) {
-            throw new RuntimeException("Error deleting product details", e);
-        }
-    }
+            boolean isProductExists = productFacade.isProductExists(deleteProductRequestDTO.getProviderId(), deleteProductRequestDTO.getMetalId());
 
-    @Override
-    public AllProductsResponseDTO fetchAllProductDetails(int page, int size, String sortField, String sortOrder) {
-        try {
-            List<ProductEntity> productEntityList = productDAO.getAllProducts(sortField, sortOrder, page, size);
-
-            AllProductsResponseDTO.Builder allProductsResponseDTOBuilder = AllProductsResponseDTO.newBuilder();
-
-            for (ProductEntity productEntity : productEntityList) {
-                ProductResponseDTO productResponseDTO = ProductResponseDTO.newBuilder()
-                    .setMetalId(productEntity.getMetalId())
-                    .setProviderId(productEntity.getProviderId())
-                    .setProductName(productEntity.getProductName())
-                    .setDescription(productEntity.getProductDescription())
-                    .setPrice(productEntity.getProductValue())
-
-                    .build();
-
-                allProductsResponseDTOBuilder.addProducts(productResponseDTO);
+            if (!isProductExists) {
+                throw new RecordNotFoundException(CommonStatusCode.FAILED,
+                    "Product doesn't exist with providerId : " + deleteProductRequestDTO.getProviderId());
             }
 
-            return allProductsResponseDTOBuilder.build();
+            boolean isDeleted = productFacade.deleteProduct(deleteProductRequestDTO.getMetalId(), deleteProductRequestDTO.getProviderId());
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error fetching all product details", e);
+            if (isDeleted) {
+                return PlainResponseDTO.newBuilder().setMessage("Product Deleted Successfully").build();
+            } else {
+                return PlainResponseDTO.newBuilder().setMessage("Couldn't Delete Product").build();
+            }
+
+        } catch (InvalidInputException e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        } catch (RecordNotFoundException e) {
+            throw new RecordNotFoundException(CommonStatusCode.NOT_FOUND_ERROR, e.getMessage());
+        } catch (InternalServerErrorException e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
     @Override
-    public GetProductsByProviderIdResponseDTO fetchProductsByProviderId(GetProductsByProviderIdRequestDTO getProductsByProviderIdRequestDTO) {
+    public ProductResponseDTO fetchProductsByProviderAndMetalId(Long providerId, String metalId) {
         try {
-            List<ProductEntity> productEntityList = productDAO.getProductsByProviderId(
-                getProductsByProviderIdRequestDTO.getProviderId(),
-                getProductsByProviderIdRequestDTO.getSortField(),
-                getProductsByProviderIdRequestDTO.getSortOrder(),
-                getProductsByProviderIdRequestDTO.getPage(),
-                getProductsByProviderIdRequestDTO.getSize()
-            );
-
-            GetProductsByProviderIdResponseDTO.Builder responseBuilder = GetProductsByProviderIdResponseDTO.newBuilder();
-
-            for (ProductEntity productEntity : productEntityList) {
-                ProductResponseDTO productResponseDTO = ProductResponseDTO.newBuilder()
-                    .setMetalId(productEntity.getMetalId())
-                    .setProviderId(productEntity.getProviderId())
-                    .setProductName(productEntity.getProductName())
-                    .setDescription(productEntity.getProductDescription())
-                    .setPrice(productEntity.getProductValue())
-
-                    .build();
-
-                responseBuilder.addProducts(productResponseDTO);
+            Optional<ProductEntity> productEntityResponse = productFacade.fetchProductDetails(providerId, metalId);
+            if (productEntityResponse.isEmpty()) {
+                throw new RecordNotFoundException(CommonStatusCode.NOT_FOUND_ERROR, "Product doesn't exist with providerId : " + providerId);
             }
-
-            int totalPages = productDAO.getTotalPages(getProductsByProviderIdRequestDTO.getSize());
-            int totalItems = productDAO.getTotalItems();
-
-            return responseBuilder
-                .setTotalPages(totalPages)
-                .setTotalItems(totalItems)
+            ProductEntity productEntity = productEntityResponse.get();
+            return ProductResponseDTO.newBuilder()
+                .setMetalId(productEntity.getMetalId())
+                .setProviderId(productEntity.getProviderId())
+                .setProductName(productEntity.getProductName())
+                .setDescription(productEntity.getProductDescription())
+                .setPrice(productEntity.getProductValue())
                 .build();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error fetching products by provider ID", e);
+        } catch (RecordNotFoundException e) {
+            throw new RecordNotFoundException(CommonStatusCode.NOT_FOUND_ERROR, e.getMessage());
         }
     }
 
     @Override
-    public GetProductsByMetalCodeResponseDTO fetchProductsByMetalCode(GetProductsByMetalCodeRequestDTO getProductsByMetalCodeRequestDTO) {
+    public PaginatedProducts fetchProductsByProviderId(Long providerId) {
         try {
-            List<ProductEntity> productEntityList = productDAO.getProductsByMetalCode(
-                getProductsByMetalCodeRequestDTO.getMetalId(),
-                getProductsByMetalCodeRequestDTO.getSortField(),
-                getProductsByMetalCodeRequestDTO.getSortOrder(),
-                getProductsByMetalCodeRequestDTO.getPage(),
-                getProductsByMetalCodeRequestDTO.getSize()
-            );
-
-            GetProductsByMetalCodeResponseDTO.Builder responseBuilder = GetProductsByMetalCodeResponseDTO.newBuilder();
-
-            for (ProductEntity productEntity : productEntityList) {
-                ProductResponseDTO productResponseDTO = ProductResponseDTO.newBuilder()
-                    .setMetalId(productEntity.getMetalId())
-                    .setProviderId(productEntity.getProviderId())
-                    .setProductName(productEntity.getProductName())
-                    .setDescription(productEntity.getProductDescription())
-                    .setPrice(productEntity.getProductValue())
-                    .build();
-
-                responseBuilder.addProducts(productResponseDTO);
-            }
-
-            int totalPages = productDAO.getTotalPages(getProductsByMetalCodeRequestDTO.getSize());
-            int totalItems = productDAO.getTotalItems();
-
-            return responseBuilder
-                .setTotalPages(totalPages)
-                .setTotalItems(totalItems)
+            ProductFilter productFilter = ProductFilter.newBuilder().setProductName("").setMetalId("").setStockLowerLimit(0).setStockUpperLimit(0)
+                .setProductValueLowerLimit(0.00).setProductValueUpperLimit(0.00).setSortBy("").setPage(0).setPageSize(0).setProviderId(providerId)
                 .build();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error fetching products by metal code", e);
+            return productFacade.fetchProducts(productFilter);
+        } catch (InvalidInputException e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        } catch (InternalServerErrorException e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
+    @Override
+    public PaginatedProducts fetchProductsByMetalId(String metalId) {
+        try {
+            ProductFilter productFilter =
+                ProductFilter.newBuilder().setProductName("").setMetalId(metalId).setStockLowerLimit(0).setStockUpperLimit(0)
+                    .setProductValueLowerLimit(0.00).setProductValueUpperLimit(0.00).setSortBy("").setPage(0).setPageSize(0).setProviderId(0)
+                    .build();
+            return productFacade.fetchProducts(productFilter);
+        } catch (InvalidInputException e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        } catch (InternalServerErrorException e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
+        }
+    }
+
+    @Override
+    public PaginatedProducts fetchProducts(ProductFilter productFilter) {
+        try {
+            ValidationUtil.validatePaginationInputs(productFilter.getPage(), productFilter.getPageSize());
+
+            ValidationUtil.validateSortBy(productFilter.getSortBy(), "providerId", "metalId", "productName", "stock", "productValue");
+
+            return productFacade.fetchProducts(productFilter);
+        } catch (InvalidInputException e) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
+        } catch (InternalServerErrorException e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
+        }
+    }
 
 }

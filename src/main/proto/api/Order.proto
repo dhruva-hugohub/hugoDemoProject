@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package com.hugo.demo.api.order;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+import "enums/TypeOfTransaction.proto";
+
+message Order {
+  int64 order_id = 1;
+  string metal_id = 2;
+  int64 provider_id = 3;
+  int64 user_id = 4;
+  string order_status = 5;
+  double closing_balance = 6;
+  double amount = 7;
+  double quantity = 8;
+  enums.typeOfTransaction.TransactionType transaction_type = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreateOrderRequestDTO {
+  string metal_id = 1;
+  int64 provider_id = 2;
+  int64 user_id = 3;
+  optional double amount = 4;
+  optional double quantity = 5;
+  enums.typeOfTransaction.TransactionType transaction_type = 6;
+}
+
+message EditOrderRequestDTO {
+  int64 order_id = 1;
+  string order_status = 2;
+}
+
+message OrderResponseDTO {
+  Order order = 1;
+}
+
+message OrdersDTO {
+  repeated Order orders = 1;
+}
+
+message PaginatedProviders {
+  repeated Order orders = 1;
+  int32 totalItems = 2;
+  int32 totalPages = 3;
+  int32 currentPage = 4;
+  bool hasNextPage = 5;
+  bool hasPreviousPage = 6;
+}

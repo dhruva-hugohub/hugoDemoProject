@@ -13,8 +13,8 @@ public class LiveItemPriceScheduler {
         this.liveItemPriceService = liveItemPriceService;
     }
 
-    @Scheduled(fixedRate = 1000*60*5)
+    @Scheduled(fixedRate = 1000 * 60 * 5)
     public void runTask() {
-        liveItemPriceService.saveItemPricesForAllProviders( "USD", "g");
+        liveItemPriceService.saveItemPricesForAllProviders("USD", "g");
     }
 }

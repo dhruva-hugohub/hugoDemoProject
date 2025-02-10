@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.hugo.demo.enums.alertType;
+
+option java_multiple_files = true;
+
+
+enum TypeOfAlert {
+  ALL_TIME_HIGH = 0;
+  ALL_TIME_LOW = 1;
+}

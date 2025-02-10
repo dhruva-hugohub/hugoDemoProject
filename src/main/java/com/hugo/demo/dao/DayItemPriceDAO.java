@@ -11,7 +11,7 @@ public interface DayItemPriceDAO {
 
     DateItemPriceEntity editRecord(DateItemPriceEntity dayItemPriceEntity);
 
-    Optional<DateItemPriceEntity> getRecord(String metalId, String date);
+    Optional<DateItemPriceEntity> getRecord(String metalId, String date, long providerId);
 
     List<DateItemPriceEntity> fetchRecords(DateItemPriceEntity dayItemPriceEntity,
                                            String sortField, String sortOrder, Integer page, Integer size);

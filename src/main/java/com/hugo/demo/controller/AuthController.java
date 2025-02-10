@@ -9,6 +9,7 @@ import com.hugo.demo.exception.CommonStatusCode;
 import com.hugo.demo.service.UserService;
 import com.hugo.demo.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,18 +29,18 @@ public class AuthController {
     }
 
     @PostMapping(value = "/login")
-    public ApiResponse login(@RequestBody UserLoginRequestDTO userLoginRequestDTO) {
+    public ApiResponse login(@RequestBody UserLoginRequestDTO userLoginRequestDTO, HttpServletRequest request) {
 
-        UserResponseDTO responseDTO = userService.userLogin(userLoginRequestDTO);
+        UserResponseDTO responseDTO = userService.userLogin(userLoginRequestDTO, request);
 
         return ResponseUtil.buildResponse(CommonStatusCode.SUCCESS, responseDTO);
 
     }
 
-    @PostMapping("/signup")
-    public ApiResponse signup(@RequestBody UserRegisterRequestDTO userRegisterRequestDTO) {
+    @PostMapping("/register")
+    public ApiResponse register(@RequestBody UserRegisterRequestDTO userRegisterRequestDTO, HttpServletRequest request) {
 
-        UserResponseDTO responseDTO = userService.userRegister(userRegisterRequestDTO);
+        UserResponseDTO responseDTO = userService.userRegister(userRegisterRequestDTO, request);
 
         return ResponseUtil.buildResponse(CommonStatusCode.SUCCESS, responseDTO);
 

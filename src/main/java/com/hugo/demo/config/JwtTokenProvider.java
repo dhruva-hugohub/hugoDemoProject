@@ -28,14 +28,17 @@ public class JwtTokenProvider {
     @Value("${security.jwt.authorities-key}")
     private String authoritiesKey;
 
-    public String generateToken(Authentication authentication) {
+    @Value("${security.jwt.ipAddress-key}")
+    private String ipAddressKey;
+
+    public String generateToken(Authentication authentication, String ipAddress) {
 
         String username = authentication.getName();
         String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + expirationTime);
 
-        return Jwts.builder().subject(username).claim(authoritiesKey, authorities).issuedAt(new Date()).expiration(expireDate)
+        return Jwts.builder().subject(username).claim(ipAddressKey, ipAddress).claim(authoritiesKey, authorities).issuedAt(new Date()).expiration(expireDate)
             .signWith(secretKey(secretKey)).compact();
     }
 
@@ -43,6 +46,11 @@ public class JwtTokenProvider {
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
+
+    public String getIpAddressFromToken(String token) {
+        return getClaimFromToken(token, claims -> claims.get(ipAddressKey, String.class));
+    }
+
 
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
@@ -66,9 +74,10 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
-    public boolean validateToken(String token, String email) {
+    public boolean validateToken(String token, String email, String clientIpAddress) {
         final String username = getUsernameFromToken(token);
-        return (username.equals(email) && !isTokenExpired(token));
+        final String ipAddressFromToken = getIpAddressFromToken(token);
+        return (username.equals(email) && !isTokenExpired(token) && clientIpAddress.equals(ipAddressFromToken));
     }
 
     public String generateSecretKey() {

@@ -1,14 +1,12 @@
 package com.hugo.demo.service;
 
+import com.hugo.demo.api.plainResponseProto.PlainResponseDTO;
 import com.hugo.demo.api.product.AddProductRequestDTO;
-import com.hugo.demo.api.product.AllProductsResponseDTO;
 import com.hugo.demo.api.product.DeleteProductRequestDTO;
 import com.hugo.demo.api.product.EditProductRequestDTO;
-import com.hugo.demo.api.product.GetProductsByMetalCodeRequestDTO;
-import com.hugo.demo.api.product.GetProductsByMetalCodeResponseDTO;
-import com.hugo.demo.api.product.GetProductsByProviderIdRequestDTO;
-import com.hugo.demo.api.product.GetProductsByProviderIdResponseDTO;
 import com.hugo.demo.api.product.ProductResponseDTO;
+import com.hugo.demo.product.PaginatedProducts;
+import com.hugo.demo.product.ProductFilter;
 
 public interface ProductService {
 
@@ -16,11 +14,14 @@ public interface ProductService {
 
     ProductResponseDTO updateProduct(EditProductRequestDTO editProductRequestDTO);
 
-    void deleteProduct(DeleteProductRequestDTO deleteProductRequestDTO);
+    PlainResponseDTO deleteProduct(DeleteProductRequestDTO deleteProductRequestDTO);
 
-    AllProductsResponseDTO fetchAllProductDetails(int page, int size, String sortField, String sortOrder);
+    PaginatedProducts fetchProducts(ProductFilter productFilter);
 
-    GetProductsByProviderIdResponseDTO fetchProductsByProviderId(GetProductsByProviderIdRequestDTO getProductsByProviderIdRequestDTO);
+    ProductResponseDTO fetchProductsByProviderAndMetalId(Long providerId, String metalId);
 
-    GetProductsByMetalCodeResponseDTO fetchProductsByMetalCode(GetProductsByMetalCodeRequestDTO getProductsByMetalCodeRequestDTO);
+    PaginatedProducts fetchProductsByProviderId(Long providerId);
+
+    PaginatedProducts fetchProductsByMetalId(String metalId);
+
 }

@@ -5,16 +5,43 @@ package com.hugo.demo.order;
 option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
+import "enums/TypeOfTransaction.proto";
 
-message Order {
+message OrderEntity {
   int64 order_id = 1;
   string metal_id = 2;
-  bool payment_processed = 3;
+  int64 provider_id = 3;
   int64 user_id = 4;
-  double amount = 5;
-  string currency_code = 6;
-  string status_of_order = 7;
-  google.protobuf.Timestamp created_at = 8;
-  google.protobuf.Timestamp updated_At = 9;
+  string order_status = 5;
+  double closing_balance = 6;
+  double amount = 7;
+  double quantity = 8;
+  enums.typeOfTransaction.TransactionType type_of_transaction = 9;
+  string items_quantity = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
 }
+
+
+message PaginatedOrders {
+  repeated OrderEntity orders = 1;
+  int32 total_items = 2;
+  int32 total_pages = 3;
+  bool has_previous_page = 4;
+  bool has_next_page = 5;
+}
+
+message OrderFilter {
+  int64 user_id = 1;
+  int64 provider_id = 2;
+  string metal_id = 3;
+  google.protobuf.Timestamp start_date = 4;
+  google.protobuf.Timestamp end_date = 5;
+  string order_status = 6;
+  enums.typeOfTransaction.TransactionType type_of_transaction = 7;
+  string sort_by = 8;
+  int32 page = 9;
+  int32 page_size = 10;
+}
+
 
