@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.util.JsonFormat;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hugo.demo.api.alert.AlertResponseDTO;
+import com.hugo.demo.api.currency.CurrencyResponseDTO;
+import com.hugo.demo.api.dateItemPrice.DateItemPriceAPIResponseDTO;
+import com.hugo.demo.api.dateItemPrice.HistoricalDateItemPriceAPIResponseDTO;
 import com.hugo.demo.api.liveItemPrice.LiveItemPriceAPIResponseDTO;
 import com.hugo.demo.api.order.OrderResponseDTO;
 import com.hugo.demo.api.plainResponseProto.PlainResponseDTO;
@@ -13,6 +16,10 @@ import com.hugo.demo.api.product.ProductResponseDTO;
 import com.hugo.demo.api.provider.PaginatedProviders;
 import com.hugo.demo.api.provider.ProviderResponseDTO;
 import com.hugo.demo.api.user.UserResponseDTO;
+import com.hugo.demo.api.userquantity.UserQuantityResponseDTO;
+import com.hugo.demo.api.wallet.WalletResponseDTO;
+import com.hugo.demo.liveItemPrice.PaginatedLiveItemPrice;
+import com.hugo.demo.order.PaginatedOrders;
 import com.hugo.demo.product.PaginatedProducts;
 import com.hugo.demo.protobuf.ProtoMessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +46,13 @@ public class ProfileConfig implements WebMvcConfigurer {
             .add(ProductResponseDTO.getDescriptor())
             .add(AlertResponseDTO.getDescriptor())
             .add(OrderResponseDTO.getDescriptor())
+            .add(CurrencyResponseDTO.getDescriptor())
+            .add(PaginatedLiveItemPrice.getDescriptor())
+            .add(HistoricalDateItemPriceAPIResponseDTO.getDescriptor())
+            .add(DateItemPriceAPIResponseDTO.getDescriptor())
+            .add(UserQuantityResponseDTO.getDescriptor())
+            .add(WalletResponseDTO.getDescriptor())
+            .add(PaginatedOrders.getDescriptor())
             .build();
         return new ProtoMessageConverter(typeRegistry);
     }
