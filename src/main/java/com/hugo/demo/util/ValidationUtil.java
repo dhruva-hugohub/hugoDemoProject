@@ -24,6 +24,7 @@ import com.hugo.demo.api.userquantity.EditUserQuantityRequestDTO;
 import com.hugo.demo.api.wallet.CreateWalletRequestDTO;
 import com.hugo.demo.api.wallet.EditWalletRequestDTO;
 import com.hugo.demo.constants.RegexConstants;
+import com.hugo.demo.enums.alertType.TypeOfAlert;
 import com.hugo.demo.enums.typeOfTransaction.TransactionType;
 import com.hugo.demo.exception.CommonStatusCode;
 import com.hugo.demo.exception.InvalidInputException;
@@ -178,15 +179,11 @@ public class ValidationUtil {
 
     }
 
-    private static void validOrderFields(long providerId, String metalId) {
-        if (isNullOrEmpty(String.valueOf(providerId)) || providerId <= 0) {
-            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Provider Id cannot be null or empty.");
+    public static void validOrderFields(long orderId, String currencyCode) {
+        if (isNullOrEmpty(String.valueOf(orderId)) || orderId <= 0) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Order Id cannot be null or empty.");
         }
-
-        if (isNullOrEmpty(metalId)) {
-            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Metal Id cannot be null or empty.");
-        }
-
+        validateCurrencyCode(currencyCode);
     }
 
 
@@ -215,24 +212,20 @@ public class ValidationUtil {
     public static void validateCreateOrderRequest(CreateOrderRequestDTO requestDTO) {
         if (requestDTO == null) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
-        } else if(requestDTO.getTransactionType() == TransactionType.UNRECOGNIZED || requestDTO.getTransactionType() == TransactionType.UNKNOWN) {
-            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR,"Enter Valid Transaction Type for Create Order.");
-        }
-        else if (requestDTO.hasAmount() && requestDTO.getTransactionType() == TransactionType.BUY) {
-            if(requestDTO.getProviderId() <= 0){
+        } else if (requestDTO.getTransactionType() == TransactionType.UNRECOGNIZED || requestDTO.getTransactionType() == TransactionType.UNKNOWN) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Transaction Type for Create Order.");
+        } else if (requestDTO.hasAmount() && requestDTO.getTransactionType() == TransactionType.BUY) {
+            if (requestDTO.getProviderId() <= 0) {
                 throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Provider Id for Create Order.");
             }
-            if(requestDTO.getAmount() <= 0){
+            if (requestDTO.getAmount() <= 0) {
                 throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Amount for Create Order.");
             }
-        }
-        else if(requestDTO.hasQuantity() && requestDTO.getTransactionType() == TransactionType.SELL) {
-            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR,"Enter Valid Quantity for Create Order.");
-        }
-        else if(requestDTO.getMetalId().trim().length() != 3) {
+        } else if (requestDTO.hasQuantity() && requestDTO.getTransactionType() == TransactionType.SELL) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Quantity for Create Order.");
+        } else if (requestDTO.getMetalId().trim().length() != 3) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Metal Id for Create Order.");
-        }
-        else if(requestDTO.getUserId() <= 0){
+        } else if (requestDTO.getUserId() <= 0) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter User Id for Create Order.");
         }
     }
@@ -241,8 +234,6 @@ public class ValidationUtil {
         if (requestDTO == null) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
         }
-
-//        validProductFields(requestDTO.getOrderId(), requestDTO.getMetalId());
     }
 
     public static void validateWalletCreateRequest(CreateWalletRequestDTO requestDTO) {
@@ -250,7 +241,7 @@ public class ValidationUtil {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
         }
 
-        if(requestDTO.getUserId() <= 0){
+        if (requestDTO.getUserId() <= 0) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "User Id cannot be empty or less or equal to 0.");
         }
     }
@@ -259,57 +250,115 @@ public class ValidationUtil {
         if (requestDTO == null) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
         }
-        if(requestDTO.getUserId() <= 0){
+        if (requestDTO.getUserId() <= 0) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "User Id cannot be empty or less or equal to 0.");
         }
 
-        if(requestDTO.getWalletId() <= 0){
+        if (requestDTO.getWalletId() <= 0) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Wallet Id cannot be empty or less or equal to 0.");
         }
     }
 
     public static void validateCreateUserQuantity(CreateUserQuantityRequestDTO requestDTO) {
-        if(requestDTO == null) {
+        if (requestDTO == null) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
         }
-        validateUserQuantityFields( requestDTO.getUserId(), requestDTO.getQuantity(), requestDTO.getMetalId());
+        validateUserQuantityFields(requestDTO.getUserId(), requestDTO.getQuantity(), requestDTO.getMetalId());
     }
 
     public static void validateUpdateUserQuantity(EditUserQuantityRequestDTO requestDTO) {
-        if(requestDTO == null) {
+        if (requestDTO == null) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
         }
-        validateUserQuantityFields( requestDTO.getUserId(), requestDTO.getQuantity(), requestDTO.getMetalId());
+        validateUserQuantityFields(requestDTO.getUserId(), requestDTO.getQuantity(), requestDTO.getMetalId());
     }
 
     private static void validateUserQuantityFields(long userId, double quantity, String metalId) {
-        if(userId <= 0){
+        if (userId <= 0) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "User Id cannot be empty or less or equal to 0.");
         }
 
-        if(quantity <= 0){
+        if (quantity <= 0) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Quantity cannot be empty or less or equal to 0.");
         }
 
-        if(metalId.trim().length() != 3){
+        if (metalId.trim().length() != 3) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Metal Id for Create User Metal Quantity.");
         }
     }
 
     public static void validateCreateAlertRequest(CreateAlertRequestDTO requestDTO) {
-        if (requestDTO == null) {
-            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
+        validateAlertFields(requestDTO == null, requestDTO.getUserId(), requestDTO.getMetalId(), requestDTO.getProviderId(), requestDTO.getEmail(),
+            requestDTO.getMinPrice(), requestDTO.getMaxPrice(), requestDTO.getFcmToken());
+
+        boolean isValid = Arrays.stream(TypeOfAlert.values())
+            .anyMatch(type -> type == requestDTO.getTypeOfAlert());
+
+        if (!isValid) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Type of Alert is not valid.");
         }
 
-//        validProductFields(requestDTO.getProviderId(), requestDTO.getMetalId());
+        validateCurrencyCode(requestDTO.getCurrencyCode());
+
     }
 
     public static void validateEditAlertRequest(EditAlertRequestDTO requestDTO) {
-        if (requestDTO == null) {
+        validateAlertFields(requestDTO == null, requestDTO.getUserId(), requestDTO.getMetalId(), requestDTO.getProviderId(), requestDTO.getEmail(),
+            requestDTO.getMinPrice(), requestDTO.getMaxPrice(), requestDTO.getFcmToken());
+
+        validateCurrencyCode(requestDTO.getCurrencyCode());
+    }
+
+    private static void validateAlertFields(boolean b, long userId, String metalId, long providerId, String email, double minPrice, double maxPrice,
+                                            String fcmToken) {
+        if (b) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Request cannot be null.");
         }
 
-//        validProductFields(requestDTO.getProviderId(), requestDTO.getMetalId());
+        if (userId <= 0) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "User Id cannot be empty or less or equal to 0.");
+        }
+
+        if (metalId.trim().length() != 3) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Metal Id for Create Alert Quantity.");
+        }
+
+        if (providerId <= 0) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Provider Id cannot be empty or less or equal to 0.");
+        }
+
+        if (email.trim().length() <= 3) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Email for Create Alert Quantity.");
+        }
+
+        if (minPrice <= 0.00) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "MinPrice cannot be less or equal to 0.");
+        }
+
+        if (maxPrice <= 0.00) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "MaxPrice cannot be less or equal to 0.");
+        }
+
+        if (fcmToken.trim().length() <= 5) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid FCM Token for Create Alert Quantity.");
+        }
+    }
+
+    private static void validateCurrencyCode(String currencyCode) {
+        if (currencyCode == null || currencyCode.length() != 3) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Currency Code for Create Alert Quantity.");
+        }
+    }
+
+    public static void validLiveItemFields(String metalCode, long providerId, String currencyCode) {
+        if (metalCode == null || metalCode.length() != 3) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Enter Valid Metal Code for Create Live Item Record.");
+        }
+        if (providerId <= 0) {
+            throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, "Provider Id cannot be empty or less or equal to 0.");
+        }
+
+        validateCurrencyCode(currencyCode);
     }
 
 

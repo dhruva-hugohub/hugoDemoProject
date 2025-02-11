@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sqs.model.Message;
 
@@ -134,7 +135,7 @@ public class OrderServiceImpl implements OrderService {
                 Order.newBuilder().setMetalId(updatedOrderEntity.getMetalId()).setProviderId(updatedOrderEntity.getProviderId())
                     .setUserId(updatedOrderEntity.getUserId()).setAmount(updatedOrderEntity.getAmount())
                     .setOrderStatus(updatedOrderEntity.getOrderStatus()).setClosingBalance(updatedOrderEntity.getClosingBalance())
-                    .setAmount(updatedOrderEntity.getAmount()/ currencyValue).setTransactionType(updatedOrderEntity.getTypeOfTransaction())
+                    .setAmount(updatedOrderEntity.getAmount() / currencyValue).setTransactionType(updatedOrderEntity.getTypeOfTransaction())
                     .setQuantity(updatedOrderEntity.getQuantity()).build();
 
             return OrderResponseDTO.newBuilder().setOrder(updatedOrderResponse).build();
@@ -151,6 +152,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO getOrderDetailsByOrderId(long orderId, String currencyCode) {
         Optional<OrderEntity> orderEntity = orderFacade.getOrderDetailsByOrderId(orderId);
 
+        ValidationUtil.validOrderFields(orderId, currencyCode);
+
         OrderEntity updatedOrderEntity;
 
         CurrencyEntity currencyEntity = currencyFacade.fetchCurrencyDetails(currencyCode);
@@ -164,7 +167,8 @@ public class OrderServiceImpl implements OrderService {
 
         Order updatedOrderResponse = Order.newBuilder().setOrderId(updatedOrderEntity.getOrderId()).setMetalId(updatedOrderEntity.getMetalId())
             .setProviderId(updatedOrderEntity.getProviderId())
-            .setUserId(updatedOrderEntity.getUserId()).setAmount(updatedOrderEntity.getAmount() * currencyValue).setOrderStatus(updatedOrderEntity.getOrderStatus())
+            .setUserId(updatedOrderEntity.getUserId()).setAmount(updatedOrderEntity.getAmount() * currencyValue)
+            .setOrderStatus(updatedOrderEntity.getOrderStatus())
             .setClosingBalance(updatedOrderEntity.getClosingBalance())
             .setTransactionType(updatedOrderEntity.getTypeOfTransaction()).setQuantity(updatedOrderEntity.getQuantity()).build();
 
@@ -188,18 +192,18 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Async
+    @Scheduled(fixedDelay = 5000)
     @Transactional
-//    @Scheduled(fixedDelay = 5000)
     public void processPendingOrders() {
 
-            try {
-                List<Message> processOrderList = orderQueueService.pollOrderDetailsFromQueue();
-                for (Message message : processOrderList) {
-                    processSingleOrder(message);
-                }
-            } catch (Exception e) {
-                throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
+        try {
+            List<Message> processOrderList = orderQueueService.pollOrderDetailsFromQueue();
+            for (Message message : processOrderList) {
+                processSingleOrder(message);
             }
+        } catch (Exception e) {
+            throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
+        }
     }
 
 
@@ -348,5 +352,4 @@ public class OrderServiceImpl implements OrderService {
             .map(entity -> "\"" + entity.getMetalId() + "\" : \"" + entity.getQuantity() + "\"")
             .collect(Collectors.joining(", ", "{", "}"));
     }
-
 }

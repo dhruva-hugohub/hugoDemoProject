@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserQuantityServiceImpl implements UserQuantityService {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(UserQuantityServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(UserQuantityServiceImpl.class);
     private final UserQuantityFacade userQuantityFacade;
 
     public UserQuantityServiceImpl(UserQuantityFacade userQuantityFacade) {
@@ -68,7 +68,7 @@ public class UserQuantityServiceImpl implements UserQuantityService {
     public void fetchUserQuantitesByUserId(long userId){
         try {
             List<UserQuantityEntity> userQuantityEntityList = userQuantityFacade.fetchQuantitesByUserId(userId);
-            LOGGER.info("fetchUserQuantitiesByUserId:{}", userQuantityEntityList);
+            logger.info("fetchUserQuantitiesByUserId:{}", userQuantityEntityList);
         }
         catch (Exception e) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());

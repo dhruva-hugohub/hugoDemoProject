@@ -4,14 +4,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.protobuf.Option;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.hugo.demo.alert.AlertEntity;
 import com.hugo.demo.api.liveItemPrice.LiveItemPriceAPIResponseDTO;
 import com.hugo.demo.api.product.EditProductRequestDTO;
 import com.hugo.demo.currency.CurrencyEntity;
-import com.hugo.demo.dao.ProviderDAO;
 import com.hugo.demo.dateItemPrice.DateItemPriceEntity;
 import com.hugo.demo.enums.alertType.TypeOfAlert;
 import com.hugo.demo.exception.CommonStatusCode;
@@ -22,7 +20,6 @@ import com.hugo.demo.facade.AlertFacade;
 import com.hugo.demo.facade.CurrencyFacade;
 import com.hugo.demo.facade.DateItemPriceFacade;
 import com.hugo.demo.facade.LiveItemPriceFacade;
-import com.hugo.demo.facade.ProductFacade;
 import com.hugo.demo.facade.ProviderFacade;
 import com.hugo.demo.liveItemPrice.LiveItemPriceEntity;
 import com.hugo.demo.liveItemPrice.LiveItemPriceFilter;
@@ -139,9 +136,10 @@ public class LiveItemPriceServiceImpl implements LiveItemPriceService {
         String metalCode = productEntity.getMetalId();
         int providerId = providerEntity.getProviderId();
 
-        LiveItemPriceAPIResponseDTO liveItemPriceAPIResponseDTO = liveItemPriceFacade.fetchItemRecordByDate(metalCode, getCurrentTimestamp(), providerId).isEmpty() ?
-            saveItemPrice(metalCode, providerId, currencyCode, weightUnit, providerEntity.getProviderAPIUrl()) :
-            editItemPrice(metalCode, providerId, currencyCode, weightUnit, providerEntity.getProviderAPIUrl());
+        LiveItemPriceAPIResponseDTO liveItemPriceAPIResponseDTO =
+            liveItemPriceFacade.fetchItemRecordByDate(metalCode, getCurrentTimestamp(), providerId).isEmpty() ?
+                saveItemPrice(metalCode, providerId, currencyCode, weightUnit, providerEntity.getProviderAPIUrl()) :
+                editItemPrice(metalCode, providerId, currencyCode, weightUnit, providerEntity.getProviderAPIUrl());
 
         DateItemPriceEntity dateItemPriceEntityResponse = processDateItemPrice(metalCode, liveItemPriceAPIResponseDTO);
         updateProductPrice(liveItemPriceAPIResponseDTO);
@@ -149,7 +147,8 @@ public class LiveItemPriceServiceImpl implements LiveItemPriceService {
     }
 
     private DateItemPriceEntity processDateItemPrice(String metalCode, LiveItemPriceAPIResponseDTO liveItemPriceAPIResponseDTO) {
-        Optional<DateItemPriceEntity> optionalDateItemPriceFacade = dateItemPriceFacade.getRecord(metalCode, LocalDate.now().toString(), liveItemPriceAPIResponseDTO.getProviderId());
+        Optional<DateItemPriceEntity> optionalDateItemPriceFacade =
+            dateItemPriceFacade.getRecord(metalCode, LocalDate.now().toString(), liveItemPriceAPIResponseDTO.getProviderId());
 
         if (optionalDateItemPriceFacade.isEmpty()) {
             return dateItemPriceFacade.addRecord(DateItemPriceEntity.newBuilder()
@@ -206,7 +205,7 @@ public class LiveItemPriceServiceImpl implements LiveItemPriceService {
             double currencyValue = currencyEntity.getValue();
 
             LiveItemPriceFilter updatedFilter = liveItemPriceFilter.toBuilder()
-                .setValueLowerLimit( liveItemPriceFilter.getValueLowerLimit() / currencyValue )
+                .setValueLowerLimit(liveItemPriceFilter.getValueLowerLimit() / currencyValue)
                 .setValueUpperLimit(liveItemPriceFilter.getValueUpperLimit() / currencyValue)
                 .setAskValueLowerLimit(liveItemPriceFilter.getAskValueLowerLimit() / currencyValue)
                 .setAskValueUpperLimit(liveItemPriceFilter.getAskValueUpperLimit() / currencyValue)
@@ -215,17 +214,17 @@ public class LiveItemPriceServiceImpl implements LiveItemPriceService {
                 .build();
 
             return liveItemPriceFacade.fetchLiveItemPrices(updatedFilter);
-        }
-        catch (InvalidInputException e) {
+        } catch (InvalidInputException e) {
             throw new InvalidInputException(CommonStatusCode.ILLEGAL_ARGUMENT_ERROR, e.getMessage());
-        }
-        catch (InternalServerErrorException e) {
+        } catch (InternalServerErrorException e) {
             throw new GenericException(CommonStatusCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
     private LiveItemPriceAPIResponseDTO processItemPrice(String metalCode, long providerId, String currencyCode,
                                                          String weightUnit, String baseApiUrl, boolean isNewRecord) {
+        ValidationUtil.validLiveItemFields(metalCode, providerId, currencyCode);
+
         String uri = UriComponentsBuilder.fromUriString(baseApiUrl)
             .queryParam("metal", metalCode)
             .queryParam("currency", currencyCode)
